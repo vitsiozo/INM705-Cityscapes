@@ -83,20 +83,6 @@ class Trainer:
         artifact.add_file('model.pth')
         wandb.log_artifact(artifact)
 
-    def train(self, epochs):
-        best_loss = float('inf')
-        for epoch in range(1, epochs + 1):
-            train_loss = self.run_epoch(self.train_dataloader, training = True)
-            val_loss = self.run_epoch(self.val_dataloader, training = False)
-
-            logging.info(f'Epoch {epoch}/{epochs}: train loss = {train_loss:g}, val loss = {val_loss:g}')
-            wandb.log({'Epoch': epoch, 'Train loss': train_loss, 'Val loss': val_loss})
-
-            if val_loss < best_loss:
-                logging.info('Best loss found!')
-                self.log_model()
-                best_loss = val_loss
-
     def run_step(self, images, masks, training):
         if not training:
             with torch.no_grad():
@@ -116,11 +102,25 @@ class Trainer:
         for e, (images, masks) in enumerate(dataloader, start = 1):
             images, masks = images.to(device), masks.to(device).long()
             loss = self.run_step(images, masks, training)
-            logging.info(f'Running {e}/{len(dataloader)}: partial loss = {loss:g}')
+            logging.info(f'Running {e}/{len(dataloader)}: partial loss = {loss / len(images):g}')
 
             total_loss += loss
 
         return total_loss / len(dataloader)
+
+    def train(self, epochs):
+        best_loss = float('inf')
+        for epoch in range(1, epochs + 1):
+            train_loss = self.run_epoch(self.train_dataloader, training = True)
+            val_loss = self.run_epoch(self.val_dataloader, training = False)
+
+            logging.info(f'Epoch {epoch}/{epochs}: train loss = {train_loss:g}, val loss = {val_loss:g}')
+            wandb.log({'Epoch': epoch, 'Train loss': train_loss, 'Val loss': val_loss})
+
+            if val_loss < best_loss:
+                logging.info('Best loss found!')
+                self.log_model()
+                best_loss = val_loss
 
 def main():
     config = dict(
