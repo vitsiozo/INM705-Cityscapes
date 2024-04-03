@@ -139,7 +139,7 @@ def main():
     )
 
     train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/coarse/train', n = config['n'])
-    val_dataset = CityScapesDataset('data/leftImg8bit/val', 'data/coarse/val', n = min(config['n'], config['batch_size']))
+    val_dataset = CityScapesDataset('data/leftImg8bit/val', 'data/coarse/val', n = min(config['n'] or 100000, config['batch_size']))
 
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
     val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)
