@@ -115,9 +115,10 @@ class Trainer:
         total_loss = tensor(0.).to(device)
         for e, (images, masks) in enumerate(dataloader, start = 1):
             images, masks = images.to(device), masks.to(device).long()
-            total_loss += self.run_step(images, masks, training)
+            loss = self.run_step(images, masks, training)
+            logging.info(f'Running {e}/{len(dataloader)}: partial loss = {loss:g}')
 
-            logging.info(f'Running {e}/{len(dataloader)}: loss = {total_loss:g}')
+            total_loss += loss
 
         return total_loss / len(dataloader)
 
