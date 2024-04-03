@@ -63,13 +63,14 @@ class Trainer:
 
     @staticmethod
     def get_model(num_classes):
-        model = fcn_resnet50(weights = FCN_ResNet50_Weights.COCO_WITH_VOC_LABELS_V1, progress = True)
+        model = fcn_resnet50(weights = None, progress = True)
         model.classifier[4] = nn.Conv2d(512, num_classes, kernel_size = (1, 1))
         return model.to(device)
 
-    def train(self, epochs = 1):
+    def train(self, epochs = 100):
         for epoch in range(epochs):
             loss = self.run_epoch()
+            logging.info(f'Epoch {epoch}/{epochs}: loss = {loss:g}')
 
     def run_epoch(self):
         total_loss = tensor(0.)
@@ -87,11 +88,11 @@ class Trainer:
 
             logging.info(f'Running {e}/{len(self.dataloader)}: loss = {total_loss:g}')
 
-        return total_loss
+        return total_loss / len(self.dataloader)
 
 def main():
     config = {
-        'batch_size': 10,
+        'batch_size': 154,
     }
 
     wandb.init(
