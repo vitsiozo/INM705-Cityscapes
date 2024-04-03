@@ -10,11 +10,12 @@ from torch.optim import Adam
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from torchvision.models.segmentation import fcn_resnet50, FCN_ResNet50_Weights
+from wandb import Artifact
 
 device = 'cuda'
 
 class CityScapesDataset(Dataset):
-    def __init__(self, image_dir, mask_dir):
+    def __init__(self, image_dir, mask_dir, n = None):
         self.transform = transforms.Compose([
             transforms.Resize((256, 256)),
             transforms.ToTensor(),
@@ -31,10 +32,16 @@ class CityScapesDataset(Dataset):
             city_image_dir = os.path.join(image_dir, city)
             city_mask_dir = os.path.join(mask_dir, city)
             for img_file in os.listdir(city_image_dir):
-                if 'leftImg8bit' in img_file:
-                    self.images.append(os.path.join(city_image_dir, img_file))
-                    mask_file = img_file.replace('leftImg8bit.png', 'gtCoarse_labelIds.png')
-                    self.masks.append(os.path.join(city_mask_dir, mask_file))
+                if not 'leftImg8bit' in img_file:
+                    continue
+
+                mask_file = img_file.replace('leftImg8bit.png', 'gtCoarse_labelIds.png')
+
+                self.images.append(os.path.join(city_image_dir, img_file))
+                self.masks.append(os.path.join(city_mask_dir, mask_file))
+
+                if n is not None and len(self.images) >= n:
+                    return
 
     def __len__(self):
         return len(self.images)
@@ -54,9 +61,12 @@ class CityScapesDataset(Dataset):
         return image, mask
 
 class Trainer:
-    def __init__(self, dataloader):
-        self.dataloader = dataloader
+    def __init__(self, train_dataloader, val_dataloader):
+        self.train_dataloader = train_dataloader
+        self.val_dataloader = val_dataloader
+
         self.model = self.get_model(30)
+        wandb.watch(self.model, log = 'all', log_freq = 10)
 
         self.optimizer = Adam(self.model.parameters(), lr=0.001)
         self.criterion = torch.nn.CrossEntropyLoss(reduction = 'sum')
@@ -67,33 +77,56 @@ class Trainer:
         model.classifier[4] = nn.Conv2d(512, num_classes, kernel_size = (1, 1))
         return model.to(device)
 
-    def train(self, epochs = 100):
-        for epoch in range(epochs):
-            loss = self.run_epoch()
-            logging.info(f'Epoch {epoch}/{epochs}: loss = {loss:g}')
+    def log_model(self):
+        torch.save(self.model.state_dict(), 'model.pth')
+        artifact = Artifact('model_weights', type = 'model')
+        artifact.add_file('model.pth')
+        wandb.log_artifact(artifact)
 
-    def run_epoch(self):
-        total_loss = tensor(0.)
-        for e, (images, masks) in enumerate(self.dataloader):
-            images, masks = images.to(device), masks.to(device)
+    def train(self, epochs):
+        best_loss = float('inf')
+        for epoch in range(1, epochs + 1):
+            train_loss = self.run_epoch(self.train_dataloader, training = True)
+            val_loss = self.run_epoch(self.val_dataloader, training = False)
 
-            self.optimizer.zero_grad()
-            outputs = self.model(images)['out']
+            logging.info(f'Epoch {epoch}/{epochs}: train loss = {train_loss:g}, val loss = {val_loss:g}')
+            wandb.log({'Epoch': epoch, 'Train loss': train_loss, 'Val loss': val_loss})
 
-            loss = self.criterion(outputs, masks.long())
-            loss.backward()
-            self.optimizer.step()
+            if val_loss < best_loss:
+                logging.info('Best loss found!')
+                self.log_model()
+                best_loss = val_loss
 
-            total_loss += loss.item()
+    def run_step(self, images, masks, training):
+        if not training:
+            with torch.no_grad():
+                outputs = self.model(images)['out']
+                return self.criterion(outputs, masks)
 
-            logging.info(f'Running {e}/{len(self.dataloader)}: loss = {total_loss:g}')
+        self.optimizer.zero_grad()
+        outputs = self.model(images)['out']
+        loss = self.criterion(outputs, masks)
+        loss.backward()
+        self.optimizer.step()
 
-        return total_loss / len(self.dataloader)
+        return loss
+
+    def run_epoch(self, dataloader, training):
+        total_loss = tensor(0.).to(device)
+        for e, (images, masks) in enumerate(dataloader, start = 1):
+            images, masks = images.to(device), masks.to(device).long()
+            total_loss += self.run_step(images, masks, training)
+
+            logging.info(f'Running {e}/{len(dataloader)}: loss = {total_loss:g}')
+
+        return total_loss / len(dataloader)
 
 def main():
-    config = {
-        'batch_size': 154,
-    }
+    config = dict(
+        n = None,
+        batch_size = 154,
+        epochs = 100,
+    )
 
     wandb.init(
         project = 'work',
@@ -105,13 +138,14 @@ def main():
         datefmt='%Y-%m-%d %H:%M:%S',
     )
 
-    dataset = CityScapesDataset(
-        'data/leftImg8bit/train',
-        'data/coarse/train',
-    )
-    dataloader = DataLoader(dataset, batch_size = config['batch_size'], shuffle = True)
-    trainer = Trainer(dataloader)
-    trainer.train()
+    train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/coarse/train', n = config['n'])
+    val_dataset = CityScapesDataset('data/leftImg8bit/val', 'data/coarse/val', n = min(config['n'], config['batch_size']))
+
+    train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
+    val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)
+
+    trainer = Trainer(train_dataloader, val_dataloader)
+    trainer.train(epochs = config['epochs'])
 
 if __name__ == '__main__':
     main()
