@@ -106,7 +106,7 @@ class Trainer:
 
             total_loss += loss
 
-        return total_loss / len(dataloader)
+        return total_loss / len(dataloader.dataset)
 
     def train(self, epochs):
         best_loss = float('inf')
