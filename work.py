@@ -124,7 +124,7 @@ class Trainer:
 def main():
     config = dict(
         n = None,
-        batch_size = 154,
+        batch_size = 232,
         epochs = 100,
     )
 
