@@ -77,9 +77,9 @@ class Trainer:
         model.classifier[4] = nn.Conv2d(512, num_classes, kernel_size = (1, 1))
         return model.to(device)
 
-    def log_model(self):
+    def log_model(self, **metadata):
         torch.save(self.model.state_dict(), 'model.pth')
-        artifact = Artifact('model_weights', type = 'model')
+        artifact = Artifact('model_weights', type = 'model', metadata = metadata)
         artifact.add_file('model.pth')
         wandb.log_artifact(artifact)
 
@@ -119,7 +119,7 @@ class Trainer:
 
             if val_loss < best_loss:
                 logging.info('Best loss found!')
-                self.log_model()
+                self.log_model(train_loss = train_loss, val_loss = val_loss)
                 best_loss = val_loss
 
 def main():
