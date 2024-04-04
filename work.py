@@ -15,16 +15,17 @@ from wandb import Artifact
 device = 'cuda'
 
 class CityScapesDataset(Dataset):
+    transform = transforms.Compose([
+        transforms.Resize((256, 256)),
+        transforms.ToTensor(),
+    ])
+    mask_transform = transforms.Compose([
+        transforms.Resize((256, 256), interpolation=transforms.InterpolationMode.NEAREST),
+        transforms.ToTensor(),
+        lambda x: x.squeeze(0),
+    ])
+
     def __init__(self, image_dir, mask_dir, n = None):
-        self.transform = transforms.Compose([
-            transforms.Resize((256, 256)),
-            transforms.ToTensor(),
-        ])
-        self.mask_transform = transforms.Compose([
-            transforms.Resize((256, 256), interpolation=transforms.InterpolationMode.NEAREST),
-            transforms.ToTensor(),
-            lambda x: x.squeeze(0),
-        ])
 
         self.images = []
         self.masks = []
