@@ -153,10 +153,10 @@ class Trainer:
 
 def main():
     config = dict(
-        n = 10,
+        n = None,
         batch_size = 232,
-        epochs = 3,
-        ignore_index = 0,
+        epochs = 100,
+        ignore_index = -100,
     )
 
     wandb.init(
