@@ -22,16 +22,22 @@ device = 'cuda'
 class CityScapesDataset(Dataset):
     n_classes = 34
 
-    transform = transforms.Compose([
-        #transforms.Resize((1024, 1024)),
-        transforms.ToTensor(),
-    ])
-    mask_transform = transforms.Compose([
-        # transforms.Resize((1024, 1024), interpolation=transforms.InterpolationMode.NEAREST),
-        lambda x: torch.from_numpy(array(x)).long(),
-    ])
+    @staticmethod
+    def get_transforms(size):
+        transform = transforms.Compose([
+            transforms.Resize((size, size)),
+            transforms.ToTensor(),
+        ])
+        mask_transform = transforms.Compose([
+            transforms.Resize((size, size), interpolation=transforms.InterpolationMode.NEAREST),
+            lambda x: torch.from_numpy(array(x)).long(),
+        ])
 
-    def __init__(self, image_dir, mask_dir, n = None):
+        return transform, mask_transform
+
+    def __init__(self, image_dir, mask_dir, n = None, size = 512):
+        self.transform, self.mask_transform = self.get_transforms(size)
+
         self.images = []
         self.masks = []
         for city in os.listdir(image_dir):
@@ -161,9 +167,11 @@ def main():
 
     config = dict(
         n = None if is_hyperion else 10,
-        batch_size = 232 if is_hyperion else 1,
-        epochs = 100,
+        batch_size = 64 if is_hyperion else 1,
+        epochs = 300,
         ignore_index = 0,
+        granularity = 'fine',
+        image_size = 512,
     )
 
     wandb.init(
@@ -176,8 +184,8 @@ def main():
         datefmt='%Y-%m-%d %H:%M:%S',
     )
 
-    train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/fine/train', n = config['n'])
-    val_dataset = CityScapesDataset('data/leftImg8bit/val', 'data/fine/val', n = config['n'])
+    train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/fine/train', n = config['n'], size = config['image_size'])
+    val_dataset = CityScapesDataset('data/leftImg8bit/val', 'data/fine/val', n = config['n'], size = config['image_size'])
 
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
     val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)
