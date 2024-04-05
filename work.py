@@ -3,6 +3,7 @@ import numpy
 import os
 import pickle
 import seaborn
+import socket
 import torch
 import wandb
 
@@ -19,16 +20,24 @@ from wandb import Artifact
 device = 'cuda'
 
 class CityScapesDataset(Dataset):
-    transform = transforms.Compose([
-        transforms.Resize((256, 256)),
-        transforms.ToTensor(),
-    ])
-    mask_transform = transforms.Compose([
-        transforms.Resize((256, 256), interpolation=transforms.InterpolationMode.NEAREST),
-        lambda x: torch.from_numpy(array(x)).long(),
-    ])
+    n_classes = 34
 
-    def __init__(self, image_dir, mask_dir, n = None):
+    @staticmethod
+    def get_transforms(size):
+        transform = transforms.Compose([
+            transforms.Resize((size, size)),
+            transforms.ToTensor(),
+        ])
+        mask_transform = transforms.Compose([
+            transforms.Resize((size, size), interpolation=transforms.InterpolationMode.NEAREST),
+            lambda x: torch.from_numpy(array(x)).long(),
+        ])
+
+        return transform, mask_transform
+
+    def __init__(self, image_dir, mask_dir, n = None, size = 512):
+        self.transform, self.mask_transform = self.get_transforms(size)
+
         self.images = []
         self.masks = []
         for city in os.listdir(image_dir):
@@ -38,7 +47,7 @@ class CityScapesDataset(Dataset):
                 if not 'leftImg8bit' in img_file:
                     continue
 
-                mask_file = img_file.replace('leftImg8bit.png', 'gtCoarse_labelIds.png')
+                mask_file = img_file.replace('leftImg8bit.png', 'gtFine_labelIds.png')
 
                 self.images.append(os.path.join(city_image_dir, img_file))
                 self.masks.append(os.path.join(city_mask_dir, mask_file))
@@ -65,10 +74,12 @@ class CityScapesDataset(Dataset):
 
 class Trainer:
     def __init__(self, train_dataloader, val_dataloader, config):
+        self.n_classes = CityScapesDataset.n_classes
+
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
 
-        self.model = self.get_model(34)
+        self.model = self.get_model(self.n_classes)
         wandb.watch(self.model, log = 'all', log_freq = 10)
 
         self.optimizer = Adam(self.model.parameters(), lr=0.001)
@@ -76,7 +87,7 @@ class Trainer:
 
     @staticmethod
     def get_model(num_classes):
-        model = fcn_resnet50(weights = None, progress = True, num_classes = 34)
+        model = fcn_resnet50(weights = None, progress = True, num_classes = num_classes)
         model.classifier[4] = nn.Conv2d(512, num_classes, kernel_size = (1, 1))
         return model.to(device)
 
@@ -111,11 +122,11 @@ class Trainer:
         return total_loss / len(dataloader.dataset)
 
     @staticmethod
-    def apply_palette(mask):
-        palette = (255 * array(seaborn.color_palette('husl', 34))).astype(numpy.uint8)
+    def apply_palette(mask, num_classes):
+        palette = (255 * array(seaborn.color_palette('husl', num_classes))).astype(numpy.uint8)
         color_mask = numpy.zeros((*mask.shape, 3), dtype = numpy.uint8)
 
-        for label in range(34):
+        for label in range(num_classes):
             color_mask[mask == label] = palette[label]
 
         return color_mask
@@ -127,8 +138,8 @@ class Trainer:
 
         return {
             'Image': wandb.Image(to_pil_image(image)),
-            'True Mask': wandb.Image(to_pil_image(self.apply_palette(mask_true))),
-            'Pred Mask': wandb.Image(to_pil_image(self.apply_palette(mask_pred))),
+            'True Mask': wandb.Image(to_pil_image(self.apply_palette(mask_true, self.n_classes))),
+            'Pred Mask': wandb.Image(to_pil_image(self.apply_palette(mask_pred, self.n_classes))),
         }
 
     def train(self, epochs):
@@ -152,11 +163,15 @@ class Trainer:
                 best_loss = val_loss
 
 def main():
+    is_hyperion = 'hyperion' in socket.gethostname()
+
     config = dict(
-        n = None,
-        batch_size = 232,
-        epochs = 100,
-        ignore_index = -100,
+        n = None if is_hyperion else 10,
+        batch_size = 64 if is_hyperion else 1,
+        epochs = 300,
+        ignore_index = 0,
+        granularity = 'fine',
+        image_size = 512,
     )
 
     wandb.init(
@@ -169,8 +184,8 @@ def main():
         datefmt='%Y-%m-%d %H:%M:%S',
     )
 
-    train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/coarse/train', n = config['n'])
-    val_dataset = CityScapesDataset('data/leftImg8bit/val', 'data/coarse/val', n = min(config['n'] or 100000, config['batch_size']))
+    train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/fine/train', n = config['n'], size = config['image_size'])
+    val_dataset = CityScapesDataset('data/leftImg8bit/val', 'data/fine/val', n = config['n'], size = config['image_size'])
 
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
     val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)
