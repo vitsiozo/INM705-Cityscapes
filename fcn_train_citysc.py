@@ -4,7 +4,11 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from citysc_dataset import CityscapesCoarseDataset
+from torchvision.transforms.functional import to_pil_image
+import numpy as np
+import seaborn as sns
+from PIL import Image
+import wandb
 from logger import Logger
 
 class SimpleFCN(nn.Module):
@@ -53,9 +57,46 @@ def train(model, device, train_loader, optimizer, epoch, num_epochs, my_logger):
         loss = nn.CrossEntropyLoss()(output, target)
         loss.backward()
         optimizer.step()
+
         if batch_idx % 10 == 0:  # Print log every 10 batches
             my_logger.log({"epoch": epoch, "loss": loss.item(), "batch": batch_idx})
             print(f'Train Epoch: {epoch}/{num_epochs} [{batch_idx * len(data)}/{len(train_loader.dataset)}'
                   f' ({100. * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}')
+            
+        if batch_idx % 100 == 0:
+             # Convert the predictions and true mask to color images using the apply_palette function
+            pred = torch.argmax(output, dim=1)[0].cpu().numpy() 
+            true_mask = target[0].cpu().numpy()
 
+              # Apply the palette to colorize the prediction and the true mask
+            pred_colored = apply_palette(pred)
+            true_mask_colored = apply_palette(true_mask)
+
+              # Convert the numpy arrays to PIL images for logging
+            pred_image = Image.fromarray(pred_colored)
+            true_mask_image = Image.fromarray(true_mask_colored)
+
+              # Get the corresponding input image as a PIL image
+            input_image_pil = to_pil_image(data.cpu().data[0])
+
+              # Log the images side by side by creating a list of images
+            images_to_log = [
+              wandb.Image(input_image_pil, caption="Input Image"),
+              wandb.Image(pred_image, caption="Predicted Mask"),
+              wandb.Image(true_mask_image, caption="True Mask")
+            ]
+
+             # Log the list of images as a single entry
+            my_logger.log({"Input images, Predicted Mask, and True Mask": images_to_log})
+
+
+def apply_palette(mask):
+    # Define a palette
+    palette = (255 * np.array(sns.color_palette('husl', 34))).astype(np.uint8)
+    color_mask = np.zeros((*mask.shape, 3), dtype=np.uint8)
+    
+    for label in range(34):  
+        color_mask[mask == label] = palette[label]
+    
+    return color_mask
 

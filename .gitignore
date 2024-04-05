@@ -303,6 +303,7 @@ __pycache__/*
 dataset/*
 
 *.out
+*.output
 *.err
 
 # REVTeX puts footnotes in the bibliography by default, unless the nofootinbib
