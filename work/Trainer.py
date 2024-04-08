@@ -12,21 +12,27 @@ from torchvision.transforms.functional import to_pil_image
 from wandb import Artifact
 
 from CityScapesDataset import CityScapesDataset
+from DiceLoss import DiceLoss
 
 device = 'cuda'
 
 class Trainer:
     def __init__(self, train_dataloader, val_dataloader, config):
+        self.config = config
+
         self.n_classes = CityScapesDataset.n_classes
 
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
+        self.val_example = [x[0] for x in next(iter(val_dataloader))]
 
         self.model = self.get_model(self.n_classes)
+
         wandb.watch(self.model, log = 'all', log_freq = 10)
 
-        self.optimizer = Adam(self.model.parameters(), lr=0.001)
-        self.criterion = torch.nn.CrossEntropyLoss(reduction = 'sum', ignore_index = config['ignore_index'])
+        self.optimizer = config['optimiser'](self.model.parameters(), lr = config['lr'])
+        self.criterion = config['loss_fn']
+        self.accumulate_fn = config['accumulate_fn']
 
     @staticmethod
     def get_model(num_classes):
@@ -63,7 +69,7 @@ class Trainer:
 
             total_loss += loss
 
-        return total_loss / len(dataloader.dataset)
+        return self.accumulate_fn(total_loss, dataloader)
 
     @staticmethod
     def apply_palette(mask, num_classes):
@@ -76,7 +82,7 @@ class Trainer:
         return color_mask
 
     def get_sample(self):
-        image, mask_true = [x[0] for x in next(iter(self.val_dataloader))]
+        image, mask_true = self.val_example
         with torch.no_grad():
             mask_pred = self.model(image.unsqueeze(0).to(device))['out'].squeeze(0).argmax(dim = 0).cpu()
 
@@ -92,17 +98,19 @@ class Trainer:
             train_loss = self.run_epoch(self.train_dataloader, training = True)
             val_loss = self.run_epoch(self.val_dataloader, training = False)
 
-            sample = self.get_sample()
-            losses = {
-                'Train loss': train_loss,
-                'Val loss': val_loss,
-            }
-
-            logging.info(f'Epoch {epoch}/{epochs}: train loss = {train_loss:g}, val loss = {val_loss:g}')
-            wandb.log({'Epoch': epoch} | sample | losses)
-
             if val_loss < best_loss:
                 logging.info('Best loss found!')
                 self.log_model(train_loss = train_loss, val_loss = val_loss)
                 best_loss = val_loss
 
+            sample = self.get_sample()
+            losses = {
+                'Train loss': train_loss,
+                'Val loss': val_loss,
+                'Best loss': best_loss,
+            }
+
+            logging.info(f'Epoch {epoch}/{epochs}: train loss = {train_loss:g}, val loss = {val_loss:g}')
+            wandb.log({'Epoch': epoch} | sample | losses)
+
+        logging.info(f'Model final loss is {best_loss}')
