@@ -1,76 +1,19 @@
 import logging
 import numpy
-import os
-import pickle
-import seaborn
-import socket
 import torch
+import seaborn
 import wandb
 
-from PIL import Image
 from numpy import array
 from torch import nn, tensor
 from torch.optim import Adam
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
 from torchvision.models.segmentation import fcn_resnet50, FCN_ResNet50_Weights
 from torchvision.transforms.functional import to_pil_image
 from wandb import Artifact
 
+from CityScapesDataset import CityScapesDataset
+
 device = 'cuda'
-
-class CityScapesDataset(Dataset):
-    n_classes = 34
-
-    @staticmethod
-    def get_transforms(size):
-        transform = transforms.Compose([
-            transforms.Resize((size, size)),
-            transforms.ToTensor(),
-        ])
-        mask_transform = transforms.Compose([
-            transforms.Resize((size, size), interpolation=transforms.InterpolationMode.NEAREST),
-            lambda x: torch.from_numpy(array(x)).long(),
-        ])
-
-        return transform, mask_transform
-
-    def __init__(self, image_dir, mask_dir, n = None, size = 512):
-        self.transform, self.mask_transform = self.get_transforms(size)
-
-        self.images = []
-        self.masks = []
-        for city in os.listdir(image_dir):
-            city_image_dir = os.path.join(image_dir, city)
-            city_mask_dir = os.path.join(mask_dir, city)
-            for img_file in os.listdir(city_image_dir):
-                if not 'leftImg8bit' in img_file:
-                    continue
-
-                mask_file = img_file.replace('leftImg8bit.png', 'gtFine_labelIds.png')
-
-                self.images.append(os.path.join(city_image_dir, img_file))
-                self.masks.append(os.path.join(city_mask_dir, mask_file))
-
-                if n is not None and len(self.images) >= n:
-                    return
-
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, idx):
-        image_path = self.images[idx]
-        mask_path = self.masks[idx]
-        image = Image.open(image_path).convert('RGB')
-        mask = Image.open(mask_path)
-
-        if self.transform:
-            image = self.transform(image)
-
-        if self.mask_transform:
-            mask = self.mask_transform(mask)
-
-        return image, mask
 
 class Trainer:
     def __init__(self, train_dataloader, val_dataloader, config):
@@ -92,6 +35,7 @@ class Trainer:
         return model.to(device)
 
     def log_model(self, **metadata):
+        torch.save(self.model.state_dict(), 'model.pth')
         artifact = Artifact('model_weights', type = 'model', metadata = metadata)
         artifact.add_file('model.pth')
         wandb.log_artifact(artifact)
@@ -162,36 +106,3 @@ class Trainer:
                 self.log_model(train_loss = train_loss, val_loss = val_loss)
                 best_loss = val_loss
 
-def main():
-    is_hyperion = 'hyperion' in socket.gethostname()
-
-    config = dict(
-        n = None if is_hyperion else 10,
-        batch_size = 64 if is_hyperion else 1,
-        epochs = 300,
-        ignore_index = 0,
-        granularity = 'fine',
-        image_size = 512,
-    )
-
-    wandb.init(
-        project = 'work',
-        config = config,
-    )
-    logging.basicConfig(
-        level=logging.INFO,
-        format='[%(asctime)s] %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-    )
-
-    train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/fine/train', n = config['n'], size = config['image_size'])
-    val_dataset = CityScapesDataset('data/leftImg8bit/val', 'data/fine/val', n = config['n'], size = config['image_size'])
-
-    train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
-    val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)
-
-    trainer = Trainer(train_dataloader, val_dataloader, config)
-    trainer.train(epochs = config['epochs'])
-
-if __name__ == '__main__':
-    main()
