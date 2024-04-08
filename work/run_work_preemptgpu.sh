@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name work                      # Job name
-#SBATCH --partition=prigpu                         # Select the correct partition.
+#SBATCH --partition=preemptgpu                         # Select the correct partition.
 #SBATCH --nodes=1                                # Run on 1 nodes (each node has 48 cores)
 #SBATCH --ntasks-per-node=1                        # Run one task
 #SBATCH --cpus-per-task=4                          # Use 4 cores, most of the procesing happens on the GPU
