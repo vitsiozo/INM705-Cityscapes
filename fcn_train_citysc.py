@@ -41,53 +41,88 @@ class SimpleFCN(nn.Module):
         
         return x
 
-def train(model, device, train_loader, optimizer, epoch, num_epochs, my_logger):
-    model.train()  # Set model to training mode
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
-
-        # Inspect the unique class indices in the target tensor
-        #unique_classes = torch.unique(target)
-        #print(f'Unique class indices in batch {batch_idx}: {unique_classes.cpu().numpy()}')
-
-        optimizer.zero_grad()
-        output = model(data)
-        target = target.long()
-        target = target.squeeze(1)
-        loss = nn.CrossEntropyLoss()(output, target)
-        loss.backward()
-        optimizer.step()
-
-        if batch_idx % 10 == 0:  # Print log every 10 batches
-            my_logger.log({"epoch": epoch, "loss": loss.item(), "batch": batch_idx})
-            print(f'Train Epoch: {epoch}/{num_epochs} [{batch_idx * len(data)}/{len(train_loader.dataset)}'
-                  f' ({100. * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}')
+def train(model, device, train_loader, val_loader, optimizer, num_epochs, my_logger):
+    # Variables for tracking best validation loss
+    best_val_loss = float('inf')
+    
+    # Move the loss function initialization outside of the loop
+    criterion = nn.CrossEntropyLoss()
+    
+    for epoch in range(1, num_epochs + 1):
+        model.train()  # Set model to training mode at the start of each epoch
+        total_loss = 0
+        
+        for batch_idx, (data, target, image_names) in enumerate(train_loader):
+            data, target = data.to(device), target.to(device)
+            optimizer.zero_grad()
             
-        if batch_idx % 100 == 0:
-             # Convert the predictions and true mask to color images using the apply_palette function
-            pred = torch.argmax(output, dim=1)[0].cpu().numpy() 
-            true_mask = target[0].cpu().numpy()
+            # Perform forward pass
+            output = model(data)
+            
+            # Calculate loss
+            target = target.long().squeeze(1)  # Ensure target is in the correct shape and type
+            loss = criterion(output, target)  # Calculate loss here
+            
+            loss.backward()
+            optimizer.step()
+            
+            total_loss += loss.item()
+        
+        avg_loss = total_loss / len(train_loader)
+        my_logger.log({"epoch": epoch, "Train Loss": avg_loss})
+        print(f"Epoch: {epoch}, Avg Loss: {avg_loss}")
 
-              # Apply the palette to colorize the prediction and the true mask
-            pred_colored = apply_palette(pred)
-            true_mask_colored = apply_palette(true_mask)
+        # Perform validation and calculate validation loss
+        if val_loader is not None:
+            val_loss = perform_validation(model, val_loader, device)
+            my_logger.log({"epoch": epoch, "Val Loss": val_loss})
+            print(f"Epoch: {epoch}, Val Loss: {val_loss}")
+            if val_loss < best_val_loss:
+                # Assuming log_model_artifact correctly handles saving the model and logging to wandb
+                my_logger.log_model_artifact(model, f"Best_Model_epoch_{epoch}", {"val_loss": val_loss, "epoch": epoch})
+                best_val_loss = val_loss
+                
+        # Log sample images at the end of each epoch
+        # Use a small batch from either train_loader or val_loader
+        model.eval()
+        with torch.no_grad():
+            for data, target, image_names in val_loader:
+                data, target = data.to(device), target.to(device)
+                output = model(data)
+                break  # Use only the first batch for logging
+                
+        sample_logs = get_sample_images(data, target, output, image_names[0])
+        my_logger.log(sample_logs)
+        model.train()  # Set model back to training mode for the next epoch
+      
+def perform_validation(model, val_loader, device):
+    model.eval()  # Set the model to evaluation mode
+    total_val_loss = 0.0
+    criterion = nn.CrossEntropyLoss()  # Define the loss function
+    with torch.no_grad():  # Disable gradient computation for validation
+        for data, target, _ in val_loader:  # Ignore image names during validation
+            data, target = data.to(device), target.to(device)
+            target = target.long().squeeze(1)  # Ensure target is in the correct shape and type
+            output = model(data)
+            loss = criterion(output, target)
+            total_val_loss += loss.item()  # Accumulate the total validation loss
 
-              # Convert the numpy arrays to PIL images for logging
-            pred_image = Image.fromarray(pred_colored)
-            true_mask_image = Image.fromarray(true_mask_colored)
+    avg_val_loss = total_val_loss / len(val_loader)  # Calculate the average validation loss
+    model.train()  # Set the model back to training mode
+    return avg_val_loss
 
-              # Get the corresponding input image as a PIL image
-            input_image_pil = to_pil_image(data.cpu().data[0])
-
-              # Log the images side by side by creating a list of images
-            images_to_log = [
-              wandb.Image(input_image_pil, caption="Input Image"),
-              wandb.Image(pred_image, caption="Predicted Mask"),
-              wandb.Image(true_mask_image, caption="True Mask")
-            ]
-
-             # Log the list of images as a single entry
-            my_logger.log({"Input images, Predicted Mask, and True Mask": images_to_log})
+def get_sample_images(data, target, output, image_name):
+    # Convert data, target, output to images, and log them
+    pred = torch.argmax(output, dim=1)[0].cpu().numpy()
+    true_mask = target[0].cpu().numpy()
+    pred_colored = apply_palette(pred)  # Your function to colorize masks
+    true_mask_colored = apply_palette(true_mask)
+    input_image = to_pil_image(data[0])
+    return {
+        f"Sample - {image_name}": [wandb.Image(input_image, caption="Input"),
+                                   wandb.Image(pred_colored, caption="Prediction"),
+                                   wandb.Image(true_mask_colored, caption="True Mask")]
+    }
 
 
 def apply_palette(mask):
