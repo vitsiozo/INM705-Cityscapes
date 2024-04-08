@@ -24,21 +24,19 @@ def parse_args(is_hyperion):
 
     args = parser.parse_args()
 
-    match args.loss_fn:
-        case 'cross_entropy':
-            args.loss_fn = CrossEntropyLoss(reduction = 'sum')
-            args.accumulate_fn = lambda loss, loader: loss / len(loader.dataset)
-        case 'dice_loss':
-            args.loss_fn = DiceLoss()
-            args.accumulate_fn = lambda loss, loader: loss / len(loader)
+    if args.loss_fn == 'cross_entropy':
+        args.loss_fn = CrossEntropyLoss(reduction = 'sum')
+        args.accumulate_fn = lambda loss, loader: loss / len(loader.dataset)
+    if args.loss_fn == 'dice_loss':
+        args.loss_fn = DiceLoss()
+        args.accumulate_fn = lambda loss, loader: loss / len(loader)
 
-    match args.optimiser:
-        case 'Adam':
-            args.optimiser = Adam
-        case 'AdamW':
-            args.optimiser = AdamW
-        case 'Adamax':
-            args.optimiser = Adamax
+    if args.loss_fn == 'Adam':
+        args.optimiser = Adam
+    if args.loss_fn == 'AdamW':
+        args.optimiser = AdamW
+    if args.loss_fn == 'Adamax':
+        args.optimiser = Adamax
 
     return vars(args)
 
