@@ -31,12 +31,14 @@ def parse_args(is_hyperion):
         args.loss_fn = DiceLoss()
         args.accumulate_fn = lambda loss, loader: loss / len(loader)
 
-    if args.loss_fn == 'Adam':
+    if args.optimiser == 'Adam':
         args.optimiser = Adam
-    if args.loss_fn == 'AdamW':
+    elif args.optimiser == 'AdamW':
         args.optimiser = AdamW
-    if args.loss_fn == 'Adamax':
+    elif args.optimiser == 'Adamax':
         args.optimiser = Adamax
+    else:
+        raise ValueError('Unknown optimizer')
 
     return vars(args)
 
