@@ -20,7 +20,7 @@ def parse_args(is_hyperion):
     parser.add_argument('--granularity', type=str, default = 'coarse', choices=['fine', 'coarse'], help='Granularity of the dataset.')
     parser.add_argument('--optimiser', type=str, default = 'Adam', choices=['Adam', 'AdamW', 'Adamax'], help='Optimiser.')
     parser.add_argument('--lr', type=float, default = 1e-3, help='Learning rate')
-    parser.add_argument('--num-epochs', type = int, default = 100 if is_hyperion else 2, help = 'Number of epochs')
+    parser.add_argument('--epochs', type = int, default = 100 if is_hyperion else 2, help = 'Number of epochs')
 
     args = parser.parse_args()
 
