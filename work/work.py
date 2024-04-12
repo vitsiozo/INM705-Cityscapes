@@ -12,33 +12,36 @@ from torch.utils.data import DataLoader
 from CityScapesDataset import CityScapesDataset
 from Trainer import Trainer
 from DiceLoss import DiceLoss
+from BaselineModel import BaselineModel
+
+device = 'cuda'
 
 def parse_args(is_hyperion):
     parser = argparse.ArgumentParser(description='Cityscapes!')
 
     parser.add_argument('--loss-fn', type=str, default = 'cross_entropy', choices=['cross_entropy', 'dice_loss'], help='Loss function.')
     parser.add_argument('--granularity', type=str, default = 'coarse', choices=['fine', 'coarse'], help='Granularity of the dataset.')
-    parser.add_argument('--optimiser', type=str, default = 'Adam', choices=['Adam', 'AdamW', 'Adamax'], help='Optimiser.')
+    parser.add_argument('--optimiser', type=str, default = 'AdamW', choices=['Adam', 'AdamW', 'Adamax'], help='Optimiser.')
     parser.add_argument('--lr', type=float, default = 1e-3, help='Learning rate')
-    parser.add_argument('--num-epochs', type = int, default = 100 if is_hyperion else 2, help = 'Number of epochs')
+    parser.add_argument('--epochs', type = int, default = 100 if is_hyperion else 2, help = 'Number of epochs')
 
     args = parser.parse_args()
 
-    match args.loss_fn:
-        case 'cross_entropy':
-            args.loss_fn = CrossEntropyLoss(reduction = 'sum')
-            args.accumulate_fn = lambda loss, loader: loss / len(loader.dataset)
-        case 'dice_loss':
-            args.loss_fn = DiceLoss()
-            args.accumulate_fn = lambda loss, loader: loss / len(loader)
+    if args.loss_fn == 'cross_entropy':
+        args.loss_fn = CrossEntropyLoss(reduction = 'sum')
+        args.accumulate_fn = lambda loss, loader: loss / len(loader.dataset)
+    if args.loss_fn == 'dice_loss':
+        args.loss_fn = DiceLoss()
+        args.accumulate_fn = lambda loss, loader: loss / len(loader)
 
-    match args.optimiser:
-        case 'Adam':
-            args.optimiser = Adam
-        case 'AdamW':
-            args.optimiser = AdamW
-        case 'Adamax':
-            args.optimiser = Adamax
+    if args.optimiser == 'Adam':
+        args.optimiser = Adam
+    elif args.optimiser == 'AdamW':
+        args.optimiser = AdamW
+    elif args.optimiser == 'Adamax':
+        args.optimiser = Adamax
+    else:
+        raise ValueError('Unknown optimizer')
 
     return vars(args)
 
@@ -75,7 +78,9 @@ def main():
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
     val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)
 
-    trainer = Trainer(train_dataloader, val_dataloader, config)
+    model = BaselineModel(3, CityScapesDataset.n_classes).to(device)
+
+    trainer = Trainer(model, train_dataloader, val_dataloader, config)
     trainer.train(epochs = config['epochs'])
 
 if __name__ == '__main__':
