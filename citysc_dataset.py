@@ -89,13 +89,13 @@ def create_dataloaders(root_dir, batch_size):
 
 def img_transform():
      return transforms.Compose([
-        transforms.Resize((256, 256)),  # Resize to a common size
+        transforms.Resize((512, 512)),  # Resize to a common size
         transforms.ToTensor(),  # Convert to tensor
     ])
 
 def label_transform():
         return transforms.Compose([
-        transforms.Resize((256, 256), interpolation=transforms.InterpolationMode.NEAREST),  # Resize labels without changing their class values
+        transforms.Resize((512, 512), interpolation=transforms.InterpolationMode.NEAREST),  # Resize labels without changing their class values
         lambda x: torch.from_numpy(np.array(x, dtype=np.int64)).long()
     ])
 

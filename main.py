@@ -1,22 +1,35 @@
 # main.py
-from logger import Logger
 import torch
 import torch.optim as optim
-from torch.utils.data import DataLoader
-from fcn_train_citysc import SimpleFCN
+from models import SimpleFCN, FCN_Skip
 from fcn_train_citysc import train
 from citysc_dataset import create_dataloaders
+from logger import Logger
+from utils import parse_arguments, read_settings
 
-def main():
+def main(settings):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    num_epochs = 10
-    batch_size = 4
-    root_dir = '/Users/vitsiozo/Code/Image/dataset' # Root directory for the dataset
+    print(f'Device used: {device}')
+
+    # Access and use the settings as needed
+    model_type = settings['model']['type']
+    num_classes = settings['training']['num_classes']
+    training_settings = settings['training']
+    logger_settings = settings['logger']
+
+    num_epochs = training_settings['num_epochs']
+    batch_size = training_settings['batch_size']
+    num_classes = training_settings['num_classes']
+    root_dir = training_settings['root_dir']
+    learning_rate = training_settings['learning_rate']
 
     # Initialize logger
-    experiment_name = "Cityscapes_Semantic_Segmentation"
-    my_logger = Logger(experiment_name, project='cityscapes_project')
-    my_logger.start()
+    experiment_name = logger_settings['experiment_name']
+    project = logger_settings['project']
+    entity = logger_settings['entity']
+    models_dir = logger_settings['models_dir']
+    my_logger = Logger(experiment_name, project, entity, models_dir)
+    my_logger.start(settings)
     
     # Create dataloader for training and validation
     train_loader, val_loader = create_dataloaders(
@@ -24,15 +37,30 @@ def main():
         batch_size=batch_size,
     )
     
-    model = SimpleFCN(num_classes=34).to(device)
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    model = get_model(model_type, num_classes).to(device)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     
-    # Optionally watch model for gradients and model parameters
+    # Log gradients and model parameters
     my_logger.watch(model)
     
-    # Training loop...
-    train(model, device, train_loader, val_loader, optimizer, num_epochs, my_logger)
-        
-            
+    # Training loop
+    train(model, device, train_loader, val_loader, optimizer, num_epochs, my_logger)        
+
+def get_model(model_name, num_classes):
+    models = {
+        'SimpleFCN': SimpleFCN,
+        'FCN_Skip': FCN_Skip
+        # Additional models can be added here.
+    }
+    try:
+        return models[model_name](num_classes)
+    except KeyError:
+        raise ValueError(f"Unsupported model type: {model_name}")
+
 if __name__ == '__main__':
-    main()
+    args = parse_arguments()
+
+    # Read settings from the YAML file
+    settings = read_settings(args.config)
+
+    main(settings)

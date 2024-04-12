@@ -301,6 +301,7 @@ wandb/*
 __pycache__/*
 
 dataset/*
+models/*
 
 *.out
 *.output
