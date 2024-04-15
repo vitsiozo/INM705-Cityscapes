@@ -296,6 +296,7 @@ TSWLatexianTemp*
 *.xwm
 
 wandb/*
+*/wandb/*
 
 .DS_Store
 __pycache__/*
@@ -306,6 +307,12 @@ models/*
 *.out
 *.output
 *.err
+
+*.pth
+__pycache__/*
+*/__pycache__/*
+
+data/
 
 # REVTeX puts footnotes in the bibliography by default, unless the nofootinbib
 # option is specified. Footnotes are the stored in a file with suffix Notes.bib.
