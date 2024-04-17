@@ -28,6 +28,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser.add_argument('--lr', type = float, default = 1e-3, help = 'Learning rate')
     parser.add_argument('--epochs', type = int, default = 100 if is_hyperion else 2, help = 'Number of epochs')
     parser.add_argument('--model', default = 'Baseline', choices = ['Baseline', 'UNet'], dest = 'model_name', help = 'Which model to use.')
+    parser.add_argument('--batch-size', type = int, nargs = '?', help = 'Batch size')
 
     args = parser.parse_args()
 
@@ -55,6 +56,9 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
         args.model = UNetModel(3, CityScapesDataset.n_classes)
     else:
         raise ValueError(f'Unknown model {args.model_name}')
+
+    if args.batch_size is None:
+        del args.batch_size
 
     return vars(args)
 
