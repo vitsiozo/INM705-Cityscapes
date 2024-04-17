@@ -16,7 +16,7 @@ class CityScapesDataset(Dataset):
             transforms.ToTensor(),
         ])
         mask_transform = transforms.Compose([
-            transforms.Resize((size, size), interpolation=transforms.InterpolationMode.NEAREST),
+            transforms.Resize((size, size), interpolation = transforms.InterpolationMode.NEAREST),
             lambda x: torch.from_numpy(array(x)).long(),
         ])
 

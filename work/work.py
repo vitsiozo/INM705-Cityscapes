@@ -5,6 +5,8 @@ import socket
 import torch
 import wandb
 
+from typing import Any
+
 from torch.nn import CrossEntropyLoss
 from torch.optim import Adam, AdamW, Adamax
 from torch.utils.data import DataLoader
@@ -13,35 +15,46 @@ from CityScapesDataset import CityScapesDataset
 from Trainer import Trainer
 from DiceLoss import DiceLoss
 from BaselineModel import BaselineModel
+from UNetModel import UNetModel
 
 device = 'cuda'
 
-def parse_args(is_hyperion):
-    parser = argparse.ArgumentParser(description='Cityscapes!')
+def parse_args(is_hyperion: bool) -> dict[str, Any]:
+    parser = argparse.ArgumentParser(description = 'Cityscapes!')
 
-    parser.add_argument('--loss-fn', type=str, default = 'cross_entropy', choices=['cross_entropy', 'dice_loss'], help='Loss function.')
-    parser.add_argument('--granularity', type=str, default = 'coarse', choices=['fine', 'coarse'], help='Granularity of the dataset.')
-    parser.add_argument('--optimiser', type=str, default = 'AdamW', choices=['Adam', 'AdamW', 'Adamax'], help='Optimiser.')
-    parser.add_argument('--lr', type=float, default = 1e-3, help='Learning rate')
+    parser.add_argument('--loss-fn', type = str, default = 'cross_entropy', choices = ['cross_entropy', 'dice_loss'], dest = 'loss_fn_name', help = 'Loss function.')
+    parser.add_argument('--granularity', type = str, default = 'coarse', choices = ['fine', 'coarse'], help = 'Granularity of the dataset.')
+    parser.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
+    parser.add_argument('--lr', type = float, default = 1e-3, help = 'Learning rate')
     parser.add_argument('--epochs', type = int, default = 100 if is_hyperion else 2, help = 'Number of epochs')
+    parser.add_argument('--model', default = 'Baseline', choices = ['Baseline', 'UNet'], dest = 'model_name', help = 'Which model to use.')
 
     args = parser.parse_args()
 
-    if args.loss_fn == 'cross_entropy':
+    if args.loss_fn_name == 'cross_entropy':
         args.loss_fn = CrossEntropyLoss(reduction = 'sum')
         args.accumulate_fn = lambda loss, loader: loss / len(loader.dataset)
-    if args.loss_fn == 'dice_loss':
+    elif args.loss_fn_name == 'dice_loss':
         args.loss_fn = DiceLoss()
         args.accumulate_fn = lambda loss, loader: loss / len(loader)
+    else:
+        raise ValueError(f'Unknown loss function {args.loss_fn}')
 
-    if args.optimiser == 'Adam':
+    if args.optimiser_name == 'Adam':
         args.optimiser = Adam
-    elif args.optimiser == 'AdamW':
+    elif args.optimiser_name == 'AdamW':
         args.optimiser = AdamW
-    elif args.optimiser == 'Adamax':
+    elif args.optimiser_name == 'Adamax':
         args.optimiser = Adamax
     else:
-        raise ValueError('Unknown optimizer')
+        raise ValueError(f'Unknown optimiser {args.optimiser_name}')
+
+    if args.model_name == 'Baseline':
+        args.model = BaselineModel(3, CityScapesDataset.n_classes)
+    elif args.model_name == 'UNet':
+        args.model = UNetModel(3, CityScapesDataset.n_classes)
+    else:
+        raise ValueError(f'Unknown model {args.model_name}')
 
     return vars(args)
 
@@ -67,9 +80,9 @@ def main():
         config = config,
     )
     logging.basicConfig(
-        level=logging.INFO,
-        format='[%(asctime)s] %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
+        level = logging.INFO,
+        format = '[%(asctime)s] %(message)s',
+        datefmt = '%Y-%m-%d %H:%M:%S',
     )
 
     train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/fine/train', n = config['n'], size = config['image_size'])
@@ -78,7 +91,7 @@ def main():
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
     val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)
 
-    model = BaselineModel(3, CityScapesDataset.n_classes).to(device)
+    model = config['model'].to(device)
 
     trainer = Trainer(model, train_dataloader, val_dataloader, config)
     trainer.train(epochs = config['epochs'])
