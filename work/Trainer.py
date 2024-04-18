@@ -14,11 +14,10 @@ from wandb import Artifact # type: ignore
 from CityScapesDataset import CityScapesDataset
 from DiceLoss import DiceLoss
 
-device = 'cuda'
-
 class Trainer:
     def __init__(self, model, train_dataloader, val_dataloader, config):
         self.config = config
+        self.device = self.config['device']
 
         self.n_classes = CityScapesDataset.n_classes
 
@@ -55,9 +54,9 @@ class Trainer:
         return loss
 
     def run_epoch(self, dataloader, training):
-        total_loss = tensor(0.).to(device)
+        total_loss = tensor(0.).to(self.device)
         for e, (images, masks) in enumerate(dataloader, start = 1):
-            images, masks = images.to(device), masks.to(device)
+            images, masks = images.to(self.device), masks.to(self.device)
             loss = self.run_step(images, masks, training)
             logging.info(f'Running {e}/{len(dataloader)}: partial loss = {loss / len(images):g}')
 
@@ -78,7 +77,7 @@ class Trainer:
     def get_sample(self):
         image, mask_true = self.val_example
         with torch.no_grad():
-            mask_pred = self.model(image.unsqueeze(0).to(device)).squeeze(0).argmax(dim = 0).cpu()
+            mask_pred = self.model(image.unsqueeze(0).to(self.device)).squeeze(0).argmax(dim = 0).cpu()
 
         return {
             'Image': wandb.Image(to_pil_image(image)),

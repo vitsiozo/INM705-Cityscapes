@@ -17,18 +17,16 @@ from DiceLoss import DiceLoss
 from BaselineModel import BaselineModel
 from UNetModel import UNetModel
 
-device = 'cuda'
-
 def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser = argparse.ArgumentParser(description = 'Cityscapes!')
 
-    parser.add_argument('--loss-fn', type = str, default = 'cross_entropy', choices = ['cross_entropy', 'dice_loss'], dest = 'loss_fn_name', help = 'Loss function.')
     parser.add_argument('--granularity', type = str, default = 'coarse', choices = ['fine', 'coarse'], help = 'Granularity of the dataset.')
-    parser.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
     parser.add_argument('--lr', type = float, default = 1e-3, help = 'Learning rate')
     parser.add_argument('--epochs', type = int, default = 100 if is_hyperion else 2, help = 'Number of epochs')
-    parser.add_argument('--model', default = 'Baseline', choices = ['Baseline', 'UNet'], dest = 'model_name', help = 'Which model to use.')
     parser.add_argument('--batch-size', type = int, nargs = '?', help = 'Batch size')
+    parser.add_argument('--loss-fn', type = str, default = 'cross_entropy', choices = ['cross_entropy', 'dice_loss'], dest = 'loss_fn_name', help = 'Loss function.')
+    parser.add_argument('--model', default = 'Baseline', choices = ['Baseline', 'UNet'], dest = 'model_name', help = 'Which model to use.')
+    parser.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
 
     args = parser.parse_args()
 
@@ -67,6 +65,13 @@ def main():
     random_seed = random.randint(0, 1000)
     torch.manual_seed(random_seed)
 
+    if torch.cuda.is_available():
+        device = 'cuda'
+    elif torch.backends.mps.is_available():
+        device = 'mps'
+    else:
+        raise RuntimeError('No GPU backend')
+
     config = dict(
         random_seed = random_seed,
         n = None if is_hyperion else 10,
@@ -76,6 +81,7 @@ def main():
         granularity = 'fine',
         image_size = 512,
         loss_fn = 'dice_loss',
+        device = device,
     )
     config |= parse_args(is_hyperion)
 
