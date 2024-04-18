@@ -26,8 +26,9 @@ class Trainer:
         self.val_example = [x[0] for x in next(iter(val_dataloader))]
 
         self.model = model
-
         wandb.watch(self.model, log = 'all', log_freq = 10)
+
+        self.artifact_to_delete = None
 
         self.optimizer = config['optimiser'](self.model.parameters(), lr = config['lr'])
         self.criterion = config['loss_fn']
@@ -35,9 +36,28 @@ class Trainer:
 
     def log_model(self, **metadata):
         torch.save(self.model.state_dict(), 'model.pth')
-        artifact = Artifact('model_weights', type = 'model', metadata = metadata)
+
+        api = wandb.Api()
+        wandb_label = f'{wandb.run.id}_best'
+        name = 'model_weights'
+
+        artifact = Artifact(name, type = 'model', metadata = metadata)
         artifact.add_file('model.pth')
-        wandb.log_artifact(artifact)
+        wandb.log_artifact(artifact, aliases = [wandb_label])
+
+        if self.artifact_to_delete is not None:
+            logging.info(f'Deleting old artifact with ID {self.artifact_to_delete.id}')
+            self.artifact_to_delete.delete()
+            self.artifact_to_delete = None
+
+        try:
+            old_artifact = api.artifact(f'{wandb.run.entity}/{wandb.run.project}/{name}:{wandb_label}')
+            old_artifact.aliases.remove(wandb_label)
+            old_artifact.save()
+
+            self.artifact_to_delete = old_artifact
+        except wandb.errors.CommError as e:
+            logging.info(f'First artifact, not deleting ({e})')
 
     def run_step(self, images, masks, training):
         if not training:
@@ -93,7 +113,7 @@ class Trainer:
 
             if val_loss < best_loss:
                 logging.info('Best loss found!')
-                self.log_model(train_loss = train_loss, val_loss = val_loss)
+                self.log_model(train_loss = train_loss, val_loss = val_loss, epoch = epoch)
                 best_loss = val_loss
 
             sample = self.get_sample()

@@ -21,6 +21,7 @@ from UNetModel import UNetModel
 from BaselineNoBatchNormModel import BaselineNoBatchNormModel
 from UNetNoBatchNormModel import UNetNoBatchNormModel
 from UNetTransformerModel import UNetTransformerModel
+from UNetTransformerPretrainedModel import UNetTransformerPretrainedModel
 
 def parse_args(is_hyperion: bool) -> dict[str, Any]:
     models = {
@@ -28,7 +29,8 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
         'BaselineNoBatchNorm': BaselineNoBatchNormModel,
         'UNet': UNetModel,
         'UNetNoBatchNorm': UNetNoBatchNormModel,
-        'UNetTransformer': UNetTransformerModel
+        'UNetTransformerPretrained': UNetTransformerPretrainedModel,
+        'UNetTransformer': UNetTransformerModel,
     }
 
     parser = argparse.ArgumentParser(description = 'Cityscapes!')

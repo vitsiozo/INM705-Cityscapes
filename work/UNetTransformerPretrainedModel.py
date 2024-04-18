@@ -33,7 +33,7 @@ class Upsampler(nn.Module):
 class Transformer(nn.Module):
     def __init__(self):
         super().__init__()
-        self.transformer = torchvision.models.vit_h_14(weights = None)
+        self.transformer = torchvision.models.vit_h_14(weights = torchvision.models.ViT_H_14_Weights.DEFAULT)
         self.transformer.heads = nn.Identity()
 
     def forward(self, x):
@@ -41,7 +41,7 @@ class Transformer(nn.Module):
         x = x.unsqueeze(2).unsqueeze(3)
         return x
 
-class UNetTransformerModel(nn.Module):
+class UNetTransformerPretrainedModel(nn.Module):
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
 
