@@ -19,13 +19,15 @@ from BaselineModel import BaselineModel
 from UNetModel import UNetModel
 from BaselineNoBatchNormModel import BaselineNoBatchNormModel
 from UNetNoBatchNormModel import UNetNoBatchNormModel
+from UNetTransformerModel import UNetTransformerModel
 
 def parse_args(is_hyperion: bool) -> dict[str, Any]:
     models = {
         'Baseline': BaselineModel,
         'BaselineNoBatchNorm': BaselineNoBatchNormModel,
         'UNet': UNetModel,
-        'UNetNoBatchNormModel': UNetNoBatchNormModel,
+        'UNetNoBatchNorm': UNetNoBatchNormModel,
+        'UNetTransformer': UNetTransformerModel
     }
 
     parser = argparse.ArgumentParser(description = 'Cityscapes!')
@@ -38,6 +40,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser.add_argument('--model', default = 'Baseline', choices = models.keys(), dest = 'model_name', help = 'Which model to use.')
     parser.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
     parser.add_argument('--comment', type = str, help = 'Comment for wandb')
+    parser.add_argument('--image-size', type = int, help = 'The square image size to use')
 
     args = parser.parse_args()
 
@@ -63,6 +66,9 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
 
     if args.batch_size is None:
         del args.batch_size
+
+    if args.image_size is None:
+        del args.image_size
 
     return vars(args)
 
