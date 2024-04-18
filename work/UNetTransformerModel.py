@@ -47,7 +47,7 @@ class UNetTransformerModel(nn.Module):
 
         self.transformer = Transformer()
 
-        self.dec5 = Upsampler(1024, 512)
+        self.dec5 = Upsampler(1280, 512)
         self.dec4 = Upsampler(512, 256)
         self.dec3 = Upsampler(256, 128)
         self.dec2 = Upsampler(128, 64)
