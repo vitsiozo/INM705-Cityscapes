@@ -27,6 +27,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser.add_argument('--loss-fn', type = str, default = 'cross_entropy', choices = ['cross_entropy', 'dice_loss'], dest = 'loss_fn_name', help = 'Loss function.')
     parser.add_argument('--model', default = 'Baseline', choices = ['Baseline', 'UNet'], dest = 'model_name', help = 'Which model to use.')
     parser.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
+    parser.add_argument('--comment', type = str, help = 'Comment for wandb')
 
     args = parser.parse_args()
 
