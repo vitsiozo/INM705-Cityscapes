@@ -22,7 +22,7 @@ class CityScapesDataset(Dataset):
 
         return transform, mask_transform
 
-    def __init__(self, image_dir, mask_dir, n = None, size = 512):
+    def __init__(self, image_dir, mask_dir, n = None, size = 512, granularity = 'coarse'):
         self.transform, self.mask_transform = self.get_transforms(size)
 
         self.images = []
@@ -34,7 +34,7 @@ class CityScapesDataset(Dataset):
                 if not 'leftImg8bit' in img_file:
                     continue
 
-                mask_file = img_file.replace('leftImg8bit.png', 'gtFine_labelIds.png')
+                mask_file = img_file.replace('leftImg8bit.png', f'gt{granularity.capitalize()}_labelIds.png')
 
                 self.images.append(os.path.join(city_image_dir, img_file))
                 self.masks.append(os.path.join(city_mask_dir, mask_file))

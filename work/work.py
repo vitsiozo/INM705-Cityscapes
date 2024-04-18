@@ -1,6 +1,7 @@
 import argparse
 import logging
 import random
+import os
 import socket
 import torch
 import wandb
@@ -97,7 +98,6 @@ def main():
         batch_size = 64 if is_hyperion else 1,
         epochs = 300 if is_hyperion else 2,
         ignore_index = 0,
-        granularity = 'fine',
         image_size = 512,
         loss_fn = 'dice_loss',
         device = device,
@@ -109,8 +109,8 @@ def main():
         config = config,
     )
 
-    train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/fine/train', n = config['n'], size = config['image_size'])
-    val_dataset = CityScapesDataset('data/leftImg8bit/val', 'data/fine/val', n = config['n'], size = config['image_size'])
+    train_dataset = CityScapesDataset('data/leftImg8bit/train', os.path.join('data', config['granularity'], 'train'), n = config['n'], size = config['image_size'], granularity = config['granularity'])
+    val_dataset = CityScapesDataset('data/leftImg8bit/val', os.path.join('data', config['granularity'], 'val'), n = config['n'], size = config['image_size'], granularity = config['granularity'])
 
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
     val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)
