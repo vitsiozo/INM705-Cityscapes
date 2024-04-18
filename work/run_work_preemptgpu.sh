@@ -11,8 +11,7 @@
 #SBATCH -o results/%x_%j.o                         # [%x with the job name], make sure 'results' folder exists.
 #SBATCH --error work_preempt.err
 #SBATCH --output work_preempt.out
-
-#Enable modules command
+#SBATCH --constraint=cuda12
 
 source /opt/flight/etc/setup.sh
 flight env activate gridware
