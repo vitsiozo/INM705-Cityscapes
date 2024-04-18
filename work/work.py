@@ -21,6 +21,13 @@ from BaselineNoBatchNormModel import BaselineNoBatchNormModel
 from UNetNoBatchNormModel import UNetNoBatchNormModel
 
 def parse_args(is_hyperion: bool) -> dict[str, Any]:
+    models = {
+        'Baseline': BaselineModel,
+        'BaselineNoBatchNorm': BaselineNoBatchNormModel,
+        'UNet': UNetModel,
+        'UNetNoBatchNormModel': UNetNoBatchNormModel,
+    }
+
     parser = argparse.ArgumentParser(description = 'Cityscapes!')
 
     parser.add_argument('--granularity', type = str, default = 'coarse', choices = ['fine', 'coarse'], help = 'Granularity of the dataset.')
@@ -28,7 +35,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser.add_argument('--epochs', type = int, default = 100 if is_hyperion else 2, help = 'Number of epochs')
     parser.add_argument('--batch-size', type = int, nargs = '?', help = 'Batch size')
     parser.add_argument('--loss-fn', type = str, default = 'cross_entropy', choices = ['cross_entropy', 'dice_loss'], dest = 'loss_fn_name', help = 'Loss function.')
-    parser.add_argument('--model', default = 'Baseline', choices = ['Baseline', 'UNet'], dest = 'model_name', help = 'Which model to use.')
+    parser.add_argument('--model', default = 'Baseline', choices = models.keys(), dest = 'model_name', help = 'Which model to use.')
     parser.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
     parser.add_argument('--comment', type = str, help = 'Comment for wandb')
 
@@ -52,16 +59,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     else:
         raise ValueError(f'Unknown optimiser {args.optimiser_name}')
 
-    if args.model_name == 'Baseline':
-        args.model = BaselineModel(3, CityScapesDataset.n_classes)
-    elif args.model_name == 'BaselineNoBatchNorm':
-        args.model = BaselineNoBatchNormModel(3, CityScapesDataset.n_classes)
-    elif args.model_name == 'UNet':
-        args.model = UNetModel(3, CityScapesDataset.n_classes)
-    elif args.model_name == 'UNetNoBatchNormModel':
-        args.model = UNetNoBatchNormModel(3, CityScapesDataset.n_classes)
-    else:
-        raise ValueError(f'Unknown model {args.model_name}')
+    args.model = models[args.model_name](3, CityScapesDataset.n_classes)
 
     if args.batch_size is None:
         del args.batch_size
@@ -73,12 +71,19 @@ def main():
     random_seed = random.randint(0, 1000)
     torch.manual_seed(random_seed)
 
+    logging.basicConfig(
+        level = logging.INFO,
+        format = '[%(asctime)s] %(message)s',
+        datefmt = '%Y-%m-%d %H:%M:%S',
+    )
+
     if torch.cuda.is_available():
         device = 'cuda'
     elif torch.backends.mps.is_available():
         device = 'mps'
     else:
-        raise RuntimeError('No GPU backend')
+        logging.warn('No GPU backend; defaulting to CUDA.')
+        device = 'cuda'
 
     config = dict(
         random_seed = random_seed,
@@ -96,11 +101,6 @@ def main():
     wandb.init(
         project = 'work',
         config = config,
-    )
-    logging.basicConfig(
-        level = logging.INFO,
-        format = '[%(asctime)s] %(message)s',
-        datefmt = '%Y-%m-%d %H:%M:%S',
     )
 
     train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/fine/train', n = config['n'], size = config['image_size'])
