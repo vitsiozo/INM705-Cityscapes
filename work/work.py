@@ -14,8 +14,11 @@ from torch.utils.data import DataLoader
 from CityScapesDataset import CityScapesDataset
 from Trainer import Trainer
 from DiceLoss import DiceLoss
+
 from BaselineModel import BaselineModel
 from UNetModel import UNetModel
+from BaselineNoBatchNormModel import BaselineNoBatchNormModel
+from UNetNoBatchNormModel import UNetNoBatchNormModel
 
 def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser = argparse.ArgumentParser(description = 'Cityscapes!')
@@ -51,8 +54,12 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
 
     if args.model_name == 'Baseline':
         args.model = BaselineModel(3, CityScapesDataset.n_classes)
+    elif args.model_name == 'BaselineNoBatchNorm':
+        args.model = BaselineNoBatchNormModel(3, CityScapesDataset.n_classes)
     elif args.model_name == 'UNet':
         args.model = UNetModel(3, CityScapesDataset.n_classes)
+    elif args.model_name == 'UNetNoBatchNormModel':
+        args.model = UNetNoBatchNormModel(3, CityScapesDataset.n_classes)
     else:
         raise ValueError(f'Unknown model {args.model_name}')
 
