@@ -99,11 +99,11 @@ def main():
     config |= parse_args(is_hyperion)
 
     wandb.init(
-        project = 'work',
+        project = 'gregs',
         config = config,
     )
 
-    train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/fine/train', n = config['n'], size = config['image_size'])
+    train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/fine/train', n = config['n'], size = config['image_size'], train_transforms = True)
     val_dataset = CityScapesDataset('data/leftImg8bit/val', 'data/fine/val', n = config['n'], size = config['image_size'])
 
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)

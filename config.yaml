@@ -1,6 +1,6 @@
 # config.yaml
 training:
-  root_dir: '/Users/vitsiozo/Code/Image/dataset'
+  root_dir: '/Users/vitsiozo/Code/Image/data'
   num_epochs: 10
   batch_size: 4
   num_classes: 34

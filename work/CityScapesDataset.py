@@ -3,27 +3,47 @@ import torch
 
 from numpy import array
 from PIL import Image
-from torchvision import transforms
+from torchvision.transforms import v2 as transforms
+#from torchvision import transforms
 from torch.utils.data import Dataset
 
 class CityScapesDataset(Dataset):
     n_classes = 34
 
     @staticmethod
-    def get_transforms(size):
-        transform = transforms.Compose([
-            transforms.Resize((size, size)),
-            transforms.ToTensor(),
-        ])
-        mask_transform = transforms.Compose([
-            transforms.Resize((size, size), interpolation = transforms.InterpolationMode.NEAREST),
-            lambda x: torch.from_numpy(array(x)).long(),
-        ])
+    def get_transforms(size, train_transforms=False):
+        # Resize transformations separately for the image and the mask
+        image_resize = transforms.Resize((size, size))
+        mask_resize = transforms.Resize((size, size), interpolation=transforms.InterpolationMode.NEAREST)
 
-        return transform, mask_transform
+        def apply_transforms(image, mask):
+            # Apply the respective resize transformations
+            image = image_resize(image)
+            mask = mask_resize(mask)
 
-    def __init__(self, image_dir, mask_dir, n = None, size = 512):
-        self.transform, self.mask_transform = self.get_transforms(size)
+            # Apply random transforms if specified
+            if train_transforms:
+                #print(f'Hey, I am applying random transforms')
+                # Random horizontal flip
+                if torch.rand(1) > 0.5:
+                    image = transforms.functional.hflip(image)
+                    mask = transforms.functional.hflip(mask)
+                
+                # Random rotation
+                angle = torch.randint(-10, 10, (1,)).item()
+                image = transforms.functional.rotate(image, angle)
+                mask = transforms.functional.rotate(mask, angle, interpolation=transforms.InterpolationMode.NEAREST)
+
+            # Convert the image to a tensor
+            image = transforms.functional.to_tensor(image) 
+            mask = torch.from_numpy(array(mask)).long()
+
+            return image, mask
+        
+        return apply_transforms
+
+    def __init__(self, image_dir, mask_dir, n = None, size = 512, train_transforms = False):
+        self.transform = self.get_transforms(size, train_transforms)
 
         self.images = []
         self.masks = []
@@ -51,11 +71,7 @@ class CityScapesDataset(Dataset):
         image = Image.open(image_path).convert('RGB')
         mask = Image.open(mask_path)
 
-        if self.transform:
-            image = self.transform(image)
-
-        if self.mask_transform:
-            mask = self.mask_transform(mask)
+        image, mask = self.transform(image, mask)
 
         return image, mask
 
