@@ -55,7 +55,7 @@ class UNetTransformerModel(nn.Module):
 
         self.final = nn.Sequential(
             nn.Conv2d(64, out_channels, kernel_size = 1),
-            nn.AdaptiveAvgPool2d((518, 518)),
+            nn.AdaptiveAvgPool2d((224, 224)),
         )
 
     def forward(self, x: Tensor) -> Tensor:
