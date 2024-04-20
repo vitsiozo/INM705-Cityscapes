@@ -22,6 +22,7 @@ from BaselineNoBatchNormModel import BaselineNoBatchNormModel
 from UNetNoBatchNormModel import UNetNoBatchNormModel
 from UNetTransformerModel import UNetTransformerModel
 from UNetTransformerPretrainedModel import UNetTransformerPretrainedModel
+from Swin2Model import Swin2Model
 
 def parse_args(is_hyperion: bool) -> dict[str, Any]:
     models = {
@@ -31,6 +32,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
         'UNetNoBatchNorm': UNetNoBatchNormModel,
         'UNetTransformerPretrained': UNetTransformerPretrainedModel,
         'UNetTransformer': UNetTransformerModel,
+        'Swin2': Swin2Model,
     }
 
     parser = argparse.ArgumentParser(description = 'Cityscapes!')
@@ -44,6 +46,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
     parser.add_argument('--comment', type = str, help = 'Comment for wandb')
     parser.add_argument('--image-size', type = int, help = 'The square image size to use')
+    parser.add_argument('--device', type = str, choices = ['cuda', 'mps', 'cpu'], help = 'Which device to use')
 
     args = parser.parse_args()
 
@@ -67,6 +70,14 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
 
     args.model = models[args.model_name](3, CityScapesDataset.n_classes)
 
+    if args.device is None:
+        if torch.cuda.is_available():
+            args.device = 'cuda'
+        elif torch.backends.mps.is_available():
+            args.device = 'mps'
+        else:
+            raise RuntimeError('No GPU Device (explicitly run --device=cpu for CPU)')
+
     if args.batch_size is None:
         del args.batch_size
 
@@ -86,14 +97,6 @@ def main():
         datefmt = '%Y-%m-%d %H:%M:%S',
     )
 
-    if torch.cuda.is_available():
-        device = 'cuda'
-    elif torch.backends.mps.is_available():
-        device = 'mps'
-    else:
-        logging.warn('No GPU backend; defaulting to CUDA.')
-        device = 'cuda'
-
     config = dict(
         random_seed = random_seed,
         n = None if is_hyperion else 10,
@@ -102,7 +105,6 @@ def main():
         ignore_index = 0,
         image_size = 512,
         loss_fn = 'dice_loss',
-        device = device,
     )
     config |= parse_args(is_hyperion)
 
@@ -117,7 +119,7 @@ def main():
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
     val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)
 
-    model = config['model'].to(device)
+    model = config['model'].to(config['device'])
 
     trainer = Trainer(model, train_dataloader, val_dataloader, config)
     trainer.train(epochs = config['epochs'])
