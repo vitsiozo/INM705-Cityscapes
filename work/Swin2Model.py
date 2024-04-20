@@ -49,7 +49,7 @@ class Upsampler2(nn.Module):
 class Backbone(nn.Module):
     def __init__(self):
         super().__init__()
-        model_name = 'swinv2_large_window12to24_192to384.ms_in22k_ft_in1k'
+        model_name = 'swinv2_small_window8_256.ms_in1k'
         img_size = 768
 
         # self.resize = Resize(img_size)
@@ -60,28 +60,26 @@ class Backbone(nn.Module):
         fmaps = self.backbone(x)
         fmap1, fmap2, fmap3, fmap4 = [x.permute(0, 3, 1, 2) for x in fmaps]
 
-        # fmap1: b ×  192 × 192 × 192
-        # fmap2: b ×  384 ×  96 ×  96
-        # fmap3: b ×  768 ×  48 ×  48
-        # fmap4: b × 1536 ×  24 ×  24
+        # fmap1: b × 96 × 192 × 192
+        # fmap2: b × 192 × 96 × 96
+        # fmap3: b × 384 × 48 × 48
+        # fmap4: b × 768 × 24 × 24
         return fmap1, fmap2, fmap3, fmap4
 
 class Swin2Model(nn.Module):
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.backbone = Backbone()
-        self.dec3 = Upsampler(1536, 768)
-        self.dec2 = Upsampler(768, 384)
-        self.dec1 = Upsampler(384, 192)
+        self.dec3 = Upsampler(768, 384)
+        self.dec2 = Upsampler(384, 192)
+        self.dec1 = Upsampler(192, 96)
 
-        self.final1 = Upsampler2(192, 96)
-        self.final2 = Upsampler2(96, out_channels)
+        self.final = Upsampler2(96, out_channels)
 
     def forward(self, x: Tensor) -> Tensor:
         fm1, fm2, fm3, x = self.backbone(x)
         x = self.dec3(fm3, x)
         x = self.dec2(fm2, x)
         x = self.dec1(fm1, x)
-        x = self.final1(x)
-        x = self.final2(x)
+        x = self.final(x)
         return x
