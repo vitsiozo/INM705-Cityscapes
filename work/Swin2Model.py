@@ -74,12 +74,14 @@ class Swin2Model(nn.Module):
         self.dec2 = Upsampler(384, 192)
         self.dec1 = Upsampler(192, 96)
 
-        self.final = Upsampler2(96, out_channels)
+        self.final1 = Upsampler2(96, 48)
+        self.final2 = Upsampler2(48, out_channels)
 
     def forward(self, x: Tensor) -> Tensor:
         fm1, fm2, fm3, x = self.backbone(x)
         x = self.dec3(fm3, x)
         x = self.dec2(fm2, x)
         x = self.dec1(fm1, x)
-        x = self.final(x)
+        x = self.final1(x)
+        x = self.final2(x)
         return x
