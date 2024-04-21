@@ -73,10 +73,10 @@ class Swin2DropoutModel(nn.Module):
         super().__init__()
         self.backbone = Backbone()
 
-        self.bottleneck = Block(768, 1536)
-        self.dottleneck = Block(1536, 1536)
+        self.bottleneck = Block(768, 768)
+        self.dottleneck = Block(768, 768)
 
-        self.dec4 = Upsampler(1536, 768)
+        # self.dec4 = Upsampler(1536, 768)
         self.dec3 = Upsampler(768, 384)
         self.dec2 = Upsampler(384, 192)
         self.dec1 = Upsampler(192, 96)
@@ -93,7 +93,7 @@ class Swin2DropoutModel(nn.Module):
         x = self.bottleneck(x)
         x = self.dottleneck(x)
 
-        x = self.dec4(fm4, x)
+        # x = self.dec4(fm4, x)
         x = self.dec3(fm3, x)
         x = self.dec2(fm2, x)
         x = self.dec1(fm1, x)
