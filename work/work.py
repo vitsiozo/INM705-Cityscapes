@@ -23,6 +23,7 @@ from UNetNoBatchNormModel import UNetNoBatchNormModel
 from UNetTransformerModel import UNetTransformerModel
 from UNetTransformerPretrainedModel import UNetTransformerPretrainedModel
 from Swin2Model import Swin2Model
+from Swin2DropoutModel import Swin2DropoutModel
 
 def parse_args(is_hyperion: bool) -> dict[str, Any]:
     models = {
@@ -33,6 +34,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
         'UNetTransformerPretrained': UNetTransformerPretrainedModel,
         'UNetTransformer': UNetTransformerModel,
         'Swin2': Swin2Model,
+        'Swin2Dropout': Swin2DropoutModel,
     }
 
     parser = argparse.ArgumentParser(description = 'Cityscapes!')
