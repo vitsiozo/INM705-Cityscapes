@@ -12,7 +12,7 @@ class Block(nn.Module):
         self.conv = nn.Conv2d(inlen, outlen, kernel_size = 3, padding = 1)
         self.norm = nn.BatchNorm2d(outlen)
         self.relu = nn.ReLU(inplace = True)
-        self.dropout = nn.Dropout2d(.15)
+        self.dropout = nn.Dropout2d(.1)
     
     def forward(self, x: Tensor) -> Tensor:
         x = self.conv(x)
@@ -62,28 +62,28 @@ class Backbone(nn.Module):
         fmaps = self.backbone(x)
         fmap1, fmap2, fmap3, fmap4 = [x.permute(0, 3, 1, 2) for x in fmaps]
 
-        # fmap1: b × 96 × 192 × 192
-        # fmap2: b × 192 × 96 × 96
-        # fmap3: b × 384 × 48 × 48
-        # fmap4: b × 768 × 24 × 24
+        # fmap1: b ×  128 × 192 × 192
+        # fmap2: b ×  256 ×  96 ×  96
+        # fmap3: b ×  512 ×  48 ×  48
+        # fmap4: b × 1024 ×  24 ×  24
         return fmap1, fmap2, fmap3, fmap4
 
-class Swin2DropoutModel(nn.Module):
+class Swin2BaseModel(nn.Module):
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.backbone = Backbone()
 
-        self.bottleneck = Block(768, 768)
-        self.dottleneck = Block(768, 768)
+        self.bottleneck = Block(1024, 1024)
+        self.dottleneck = Block(1024, 1024)
 
         # self.dec4 = Upsampler(1536, 768)
-        self.dec3 = Upsampler(768, 384)
-        self.dec2 = Upsampler(384, 192)
-        self.dec1 = Upsampler(192, 96)
+        self.dec3 = Upsampler(1024, 512)
+        self.dec2 = Upsampler(512, 256)
+        self.dec1 = Upsampler(256, 128)
 
-        self.final1 = Upsampler2(96, 48)
-        self.final2 = Upsampler2(48, out_channels)
-        self.final3 = nn.Conv2d(out_channels, out_channels, kernel_size = 1)
+        self.final1 = Upsampler2(128, 64)
+        self.final2 = Upsampler2(64, 32)
+        self.final3 = nn.Conv2d(32, out_channels, kernel_size = 1)
 
     def forward(self, x: Tensor) -> Tensor:
         fm1, fm2, fm3, fm4 = self.backbone(x)
