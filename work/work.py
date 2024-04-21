@@ -51,6 +51,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser.add_argument('--comment', type = str, help = 'Comment for wandb')
     parser.add_argument('--image-size', type = int, help = 'The square image size to use')
     parser.add_argument('--device', type = str, choices = ['cuda', 'mps', 'cpu'], help = 'Which device to use')
+    parser.add_argument('--dropout', type = float, help = 'How much dropout to use (if applicable).')
 
     args = parser.parse_args()
 
@@ -72,7 +73,10 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     else:
         raise ValueError(f'Unknown optimiser {args.optimiser_name}')
 
-    args.model = models[args.model_name](3, CityScapesDataset.n_classes)
+    model_args = dict(in_channels = 3, out_channels = CityScapesDataset.n_classes)
+    if args.dropout is not None:
+        model_args['dropout'] = args.dropout
+    args.model = models[args.model_name](**model_args)
 
     if args.device is None:
         if torch.cuda.is_available():

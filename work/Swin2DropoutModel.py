@@ -7,12 +7,12 @@ from torch import Tensor, nn
 from torchvision.transforms import Resize
 
 class Block(nn.Module):
-    def __init__(self, inlen: int, outlen: int):
+    def __init__(self, inlen: int, outlen: int, dropout: float):
         super().__init__()
         self.conv = nn.Conv2d(inlen, outlen, kernel_size = 3, padding = 1)
         self.norm = nn.BatchNorm2d(outlen)
         self.relu = nn.ReLU(inplace = True)
-        self.dropout = nn.Dropout2d(.15)
+        self.dropout = nn.Dropout2d(dropout)
     
     def forward(self, x: Tensor) -> Tensor:
         x = self.conv(x)
@@ -22,11 +22,11 @@ class Block(nn.Module):
         return x
 
 class Upsampler(nn.Module):
-    def __init__(self, inlen: int, size: int):
+    def __init__(self, inlen: int, size: int, dropout: float):
         super().__init__()
         self.upsample = nn.ConvTranspose2d(inlen, size, kernel_size = 2, stride = 2)
-        self.conv2 = Block(2 * size, size)
-        self.conv1 = Block(size, size)
+        self.conv2 = Block(2 * size, size, dropout)
+        self.conv1 = Block(size, size, dropout)
 
     def forward(self, left: Tensor, x: Tensor) -> Tensor:
         x = self.upsample(x)
@@ -36,11 +36,11 @@ class Upsampler(nn.Module):
         return x
 
 class Upsampler2(nn.Module):
-    def __init__(self, inlen: int, size: int):
+    def __init__(self, inlen: int, size: int, dropout: float):
         super().__init__()
         self.upsample = nn.ConvTranspose2d(inlen, size, kernel_size = 2, stride = 2)
-        self.conv2 = Block(size, size)
-        self.conv1 = Block(size, size)
+        self.conv2 = Block(size, size, dropout)
+        self.conv1 = Block(size, size, dropout)
 
     def forward(self, x: Tensor) -> Tensor:
         x = self.upsample(x)
@@ -69,21 +69,21 @@ class Backbone(nn.Module):
         return fmap1, fmap2, fmap3, fmap4
 
 class Swin2DropoutModel(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int):
+    def __init__(self, in_channels: int, out_channels: int, dropout: float = .1):
         super().__init__()
         self.backbone = Backbone()
 
-        self.bottleneck = Block(768, 768)
-        self.dottleneck = Block(768, 768)
+        self.bottleneck = Block(1024, 1024, dropout)
+        self.dottleneck = Block(1024, 1024, dropout)
 
         # self.dec4 = Upsampler(1536, 768)
-        self.dec3 = Upsampler(768, 384)
-        self.dec2 = Upsampler(384, 192)
-        self.dec1 = Upsampler(192, 96)
+        self.dec3 = Upsampler(1024, 512, dropout)
+        self.dec2 = Upsampler(512, 256, dropout)
+        self.dec1 = Upsampler(256, 128, dropout)
 
-        self.final1 = Upsampler2(96, 48)
-        self.final2 = Upsampler2(48, out_channels)
-        self.final3 = nn.Conv2d(out_channels, out_channels, kernel_size = 1)
+        self.final1 = Upsampler2(128, 64, dropout)
+        self.final2 = Upsampler2(64, 32, dropout)
+        self.final3 = nn.Conv2d(32, out_channels, kernel_size = 1)
 
     def forward(self, x: Tensor) -> Tensor:
         fm1, fm2, fm3, fm4 = self.backbone(x)
