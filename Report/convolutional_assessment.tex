@@ -3,6 +3,12 @@
 \usepackage{microtype}
 \usepackage{geometry}
 \usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{xcolor}
+\usepackage{natbib}
+
+%set line spacing to 1.15
+\setstretch{1.15}
 
 \begin{document}
 
@@ -18,13 +24,29 @@
 	\vfill{}
 	\begin{LARGE}
 		\begin{sffamily}
-			Martin Fixman and Gregoris Vaitsas \\[10pt]
+			Martin Fixman and Grigorios Vaitsas \\[10pt]
 			2023/2024 Term
 		\end{sffamily}
 	\end{LARGE}
 \end{titlepage}
 
 \section{Introduction}
+For this study we are using the freely available Cityscapes dataset \cite{DBLP:journals/corr/CordtsORREBFRS16} to perform semantic segmentation analysis. The Cityscapes dataset is a large-scale dataset widely used for training and evaluating algorithms in the fields of computer vision, particularly for tasks such as semantic understanding and urban scene segmentation. It features a collection of diverse urban street scenes from 50 different cities, primarily across Germany but also including some neighbouring countries. 
+
+The dataset includes over 5,000 fine annotations and 20,000 coarse annotations of high-resolution images (2048$\times$1024 pixels). The fine annotations are detailed pixel-wise labels for 30 classes, of which 19 classes are considered for evaluation, such as roads, cars, pedestrians, buildings, and traffic lights. The detailed annotations are particularly valuable for tasks like semantic segmentation, where the goal is to assign a label to each pixel of the image. 
+
+The scenes represent a variety of seasons, daylight conditions, and weather scenarios, providing robust, real-world environments for training models that need to perform under varied conditions. This dataset has been widely used in research for developing and testing algorithms on tasks such as object detection, semantic segmentation, and instance segmentation in urban settings as well as advancing the state-of-the-art in visual perception for autonomous driving systems. 
+
+The Cityscapes dataset can be accessed in the following address:\\ 
+{\centering 
+\textcolor{blue} {https://www.cityscapes-dataset.com}\\
+}
+
+The aim of our particular study is to create and train at least two models; one with a basic architecture that will form our baseline model and a second one which is a model with a more complex architecture. We are aiming to demonstrate first of all that both our models are able to perform semantic segmentation on the chosen dataset. Our second goal is to investigate how the choice of various hyper-parameters and changes in architecture can affect the accuracy and performance of the models. 
+
+
+
+
 
 \section{Methodology}
 
@@ -34,6 +56,8 @@
 
 \section{Reflections}
 
+\bibliographystyle{plain}
 \bibliography{convolutional_assessment}
+
 
 \end{document}
