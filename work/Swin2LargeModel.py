@@ -51,7 +51,7 @@ class Upsampler2(nn.Module):
 class Backbone(nn.Module):
     def __init__(self):
         super().__init__()
-        model_name = 'swinv2_base_window8_256.ms_in1k'
+        model_name = 'swinv2_large_window12_192.ms_in22k'
         img_size = 768
 
         # self.resize = Resize(img_size)
@@ -62,28 +62,27 @@ class Backbone(nn.Module):
         fmaps = self.backbone(x)
         fmap1, fmap2, fmap3, fmap4 = [x.permute(0, 3, 1, 2) for x in fmaps]
 
-        # fmap1: b × 96 × 192 × 192
-        # fmap2: b × 192 × 96 × 96
-        # fmap3: b × 384 × 48 × 48
-        # fmap4: b × 768 × 24 × 24
+        # fmap1: b × 192 × 192 × 192
+        # fmap2: b × 384 × 96 × 96
+        # fmap3: b × 768 × 48 × 48
+        # fmap4: b × 1536 × 24 × 24
         return fmap1, fmap2, fmap3, fmap4
 
-class Swin2BaseModel(nn.Module):
+class Swin2LargeModel(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, dropout: float = .1):
         super().__init__()
         self.backbone = Backbone()
 
-        self.bottleneck = Block(1024, 1024, dropout)
-        self.dottleneck = Block(1024, 1024, dropout)
+        self.bottleneck = Block(1536, 1536, dropout)
+        self.dottleneck = Block(1536, 1536, dropout)
 
-        # self.dec4 = Upsampler(1536, 768)
-        self.dec3 = Upsampler(1024, 512, dropout)
-        self.dec2 = Upsampler(512, 256, dropout)
-        self.dec1 = Upsampler(256, 128, dropout)
+        self.dec3 = Upsampler(1536, 768, dropout)
+        self.dec2 = Upsampler(768, 384, dropout)
+        self.dec1 = Upsampler(384, 192, dropout)
 
-        self.final1 = Upsampler2(128, 64, dropout)
-        self.final2 = Upsampler2(64, 32, dropout)
-        self.final3 = nn.Conv2d(32, out_channels, kernel_size = 1)
+        self.final1 = Upsampler2(192, 96, dropout)
+        self.final2 = Upsampler2(96, 48, dropout)
+        self.final3 = nn.Conv2d(48, out_channels, kernel_size = 1)
 
     def forward(self, x: Tensor) -> Tensor:
         fm1, fm2, fm3, fm4 = self.backbone(x)
@@ -92,7 +91,6 @@ class Swin2BaseModel(nn.Module):
         x = self.bottleneck(x)
         x = self.dottleneck(x)
 
-        # x = self.dec4(fm4, x)
         x = self.dec3(fm3, x)
         x = self.dec2(fm2, x)
         x = self.dec1(fm1, x)
