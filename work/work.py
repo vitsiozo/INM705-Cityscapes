@@ -35,7 +35,6 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
         'UNetTransformerPretrained': UNetTransformerPretrainedModel,
         'UNetTransformer': UNetTransformerModel,
         'Swin2': Swin2Model,
-        'Swin2Dropout': Swin2DropoutModel,
         'Swin2Base': Swin2BaseModel,
     }
 
