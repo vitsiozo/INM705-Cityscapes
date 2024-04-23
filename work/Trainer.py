@@ -82,6 +82,9 @@ class Trainer:
         return self.criterion(outputs, masks)
 
     def run_epoch(self, dataloader, training):
+        # Sets training or eval mode.
+        self.model.train(training)
+
         total_loss = tensor(0.).to(self.device)
         for e, (images, masks) in enumerate(dataloader, start = 1):
             images, masks = images.to(self.device), masks.to(self.device)
