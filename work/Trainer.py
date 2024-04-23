@@ -7,6 +7,7 @@ import wandb
 from numpy import array
 from torch import nn, tensor
 from torch.optim import Adam
+from torch.optim.lr_scheduler import StepLR
 from torchvision.models.segmentation import fcn_resnet50, FCN_ResNet50_Weights
 from torchvision.transforms.functional import to_pil_image
 from wandb import Artifact # type: ignore
@@ -31,6 +32,8 @@ class Trainer:
         self.artifact_to_delete = None
 
         self.optimizer = config['optimiser'](self.model.parameters(), lr = config['lr'], weight_decay = config['weight_decay'])
+        self.scheduler = StepLR(self.optimizer, step_size = 10, gamma = config['gamma'])
+
         self.criterion = config['loss_fn']
         self.accumulate_fn = config['accumulate_fn']
 
@@ -63,28 +66,38 @@ class Trainer:
         except wandb.errors.CommError as e:
             logging.info(f'First artifact, not deleting ({e})')
 
-    def run_step(self, images, masks, training):
-        if not training:
-            with torch.no_grad():
-                outputs = self.model(images)
-                return self.criterion(outputs, masks)
-
+    def train_step(self, images, masks):
         self.optimizer.zero_grad()
+
         outputs = self.model(images)
         loss = self.criterion(outputs, masks)
         loss.backward()
-        self.optimizer.step()
 
+        self.optimizer.step()
         return loss
+
+    @torch.no_grad
+    def eval_step(self, images, masks):
+        outputs = self.model(images)
+        return self.criterion(outputs, masks)
 
     def run_epoch(self, dataloader, training):
         total_loss = tensor(0.).to(self.device)
         for e, (images, masks) in enumerate(dataloader, start = 1):
             images, masks = images.to(self.device), masks.to(self.device)
-            loss = self.run_step(images, masks, training)
-            logging.info(f'Running {e}/{len(dataloader)}: partial loss = {loss / len(images):g}')
+
+            if training:
+                loss = self.train_step(images, masks)
+            else:
+                loss = self.eval_step(images, masks)
+
+            lr = self.optimizer.param_groups[0]['lr']
+            logging.info(f'Running {e}/{len(dataloader)}: lr = {lr:g}; partial loss = {loss / len(images):g}')
 
             total_loss += loss
+
+        if training:
+            self.scheduler.step()
 
         return self.accumulate_fn(total_loss, dataloader)
 

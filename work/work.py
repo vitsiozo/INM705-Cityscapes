@@ -24,6 +24,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser.add_argument('--granularity', type = str, default = 'coarse', choices = ['fine', 'coarse'], help = 'Granularity of the dataset.')
     parser.add_argument('--lr', type = float, default = 1e-3, help = 'Learning rate')
     parser.add_argument('--weight-decay', type = float, default = 0., help = 'L2 weight decay for AdamW classifier')
+    parser.add_argument('--gamma', type = float, default = 1, help = 'Learning rate decay every 10 epochs.')
     parser.add_argument('--epochs', type = int, default = 100 if is_hyperion else 2, help = 'Number of epochs')
     parser.add_argument('--batch-size', type = int, nargs = '?', help = 'Batch size')
     parser.add_argument('--loss-fn', type = str, default = 'cross_entropy', choices = ['cross_entropy', 'dice_loss'], dest = 'loss_fn_name', help = 'Loss function.')
