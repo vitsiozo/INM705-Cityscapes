@@ -30,7 +30,7 @@ class Trainer:
 
         self.artifact_to_delete = None
 
-        self.optimizer = config['optimiser'](self.model.parameters(), lr = config['lr'])
+        self.optimizer = config['optimiser'](self.model.parameters(), lr = config['lr'], weight_decay = config['weight_decay'])
         self.criterion = config['loss_fn']
         self.accumulate_fn = config['accumulate_fn']
 
@@ -43,7 +43,11 @@ class Trainer:
 
         artifact = Artifact(name, type = 'model', metadata = metadata)
         artifact.add_file('model.pth')
-        wandb.log_artifact(artifact, aliases = [wandb_label])
+
+        labels = [wandb_label]
+        if self.config['label'] is not None:
+            labels.append(self.config['label'])
+        wandb.log_artifact(artifact, aliases = labels)
 
         if self.artifact_to_delete is not None:
             logging.info(f'Deleting old artifact with ID {self.artifact_to_delete.id}')
@@ -52,7 +56,7 @@ class Trainer:
 
         try:
             old_artifact = api.artifact(f'{wandb.run.entity}/{wandb.run.project}/{name}:{wandb_label}')
-            old_artifact.aliases.remove(wandb_label)
+            old_artifact.aliases = []
             old_artifact.save()
 
             self.artifact_to_delete = old_artifact
