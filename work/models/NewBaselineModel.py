@@ -16,19 +16,11 @@ class NewBaselineModel(nn.Module):
         self.conv7 = nn.Conv2d(32, out_channels, kernel_size = 1)
 
     def forward(self, x: Tensor) -> Tensor:
-        print(x.shape)
         x = self.conv1(x)
-        print(x.shape)
         x = self.conv2(x)
-        print(x.shape)
         x = self.conv3(x)
-        print(x.shape)
         x = self.conv4(x)
-        print(x.shape)
         x = self.conv5(x)
-        print(x.shape)
         x = self.conv6(x)
-        print(x.shape)
         x = self.conv7(x)
-        print(x.shape)
         return x
