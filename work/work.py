@@ -16,29 +16,9 @@ from CityScapesDataset import CityScapesDataset
 from Trainer import Trainer
 from DiceLoss import DiceLoss
 
-from BaselineModel import BaselineModel
-from UNetModel import UNetModel
-from BaselineNoBatchNormModel import BaselineNoBatchNormModel
-from UNetNoBatchNormModel import UNetNoBatchNormModel
-from UNetTransformerModel import UNetTransformerModel
-from UNetTransformerPretrainedModel import UNetTransformerPretrainedModel
-from Swin2Model import Swin2Model
-from Swin2BaseModel import Swin2BaseModel
-from Swin2LargeModel import Swin2LargeModel
+from Model import Model
 
 def parse_args(is_hyperion: bool) -> dict[str, Any]:
-    models = {
-        'Baseline': BaselineModel,
-        'BaselineNoBatchNorm': BaselineNoBatchNormModel,
-        'UNet': UNetModel,
-        'UNetNoBatchNorm': UNetNoBatchNormModel,
-        'UNetTransformerPretrained': UNetTransformerPretrainedModel,
-        'UNetTransformer': UNetTransformerModel,
-        'Swin2': Swin2Model,
-        'Swin2Base': Swin2BaseModel,
-        'Swin2Large': Swin2LargeModel,
-    }
-
     parser = argparse.ArgumentParser(description = 'Cityscapes!')
 
     parser.add_argument('--granularity', type = str, default = 'coarse', choices = ['fine', 'coarse'], help = 'Granularity of the dataset.')
@@ -46,7 +26,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser.add_argument('--epochs', type = int, default = 100 if is_hyperion else 2, help = 'Number of epochs')
     parser.add_argument('--batch-size', type = int, nargs = '?', help = 'Batch size')
     parser.add_argument('--loss-fn', type = str, default = 'cross_entropy', choices = ['cross_entropy', 'dice_loss'], dest = 'loss_fn_name', help = 'Loss function.')
-    parser.add_argument('--model', default = 'Baseline', choices = models.keys(), dest = 'model_name', help = 'Which model to use.')
+    parser.add_argument('--model', default = 'Baseline', choices = Model.keys(), dest = 'model_name', help = 'Which model to use.')
     parser.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
     parser.add_argument('--comment', type = str, help = 'Comment for wandb')
     parser.add_argument('--image-size', type = int, help = 'The square image size to use')
@@ -54,6 +34,13 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser.add_argument('--dropout', type = float, help = 'How much dropout to use (if applicable).')
 
     args = parser.parse_args()
+
+    args.model = Model.instanciate(
+        args.model_name,
+        in_channels = 3,
+        out_channels = CityScapesDataset.n_classes,
+        dropout = args.dropout,
+    )
 
     if args.loss_fn_name == 'cross_entropy':
         args.loss_fn = CrossEntropyLoss(reduction = 'sum')
@@ -72,11 +59,6 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
         args.optimiser = Adamax
     else:
         raise ValueError(f'Unknown optimiser {args.optimiser_name}')
-
-    model_args = dict(in_channels = 3, out_channels = CityScapesDataset.n_classes)
-    if args.dropout is not None:
-        model_args['dropout'] = args.dropout
-    args.model = models[args.model_name](**model_args)
 
     if args.device is None:
         if torch.cuda.is_available():
