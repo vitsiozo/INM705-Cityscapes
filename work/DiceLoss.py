@@ -7,14 +7,16 @@ class DiceLoss(nn.Module):
         super(DiceLoss, self).__init__()
 
     def forward(self, inputs, targets, smooth = 1):
+        device = inputs.device
+
         inputs = F.softmax(inputs, dim = 1)
         targets = targets.long().unsqueeze(1)
-        targets_one_hot = torch.eye(inputs.size(1))[targets].squeeze(2)
+        targets_one_hot = torch.eye(inputs.size(1)).to(device)[targets].squeeze(2)
 
         inputs = inputs.view(-1)
         targets_one_hot = targets_one_hot.view(-1)
         
         intersection = (inputs * targets_one_hot).sum()                            
-        dice = (2.*intersection + smooth) / (inputs.sum() + targets_one_hot.sum() + smooth)  
+        dice = (2 * intersection + smooth) / (inputs.sum() + targets_one_hot.sum() + smooth)
         
         return 1 - dice

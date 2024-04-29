@@ -1,6 +1,7 @@
 import argparse
 import logging
 import random
+import os
 import socket
 import torch
 import wandb
@@ -14,41 +15,47 @@ from torch.utils.data import DataLoader
 from CityScapesDataset import CityScapesDataset
 from Trainer import Trainer
 from DiceLoss import DiceLoss
+from JaccardLoss import IoULoss
 
-from BaselineModel import BaselineModel
-from UNetModel import UNetModel
-from BaselineNoBatchNormModel import BaselineNoBatchNormModel
-from UNetNoBatchNormModel import UNetNoBatchNormModel
+from Model import Model
+
+losses = dict(
+    cross_entropy = CrossEntropyLoss(reduction = 'sum')
+    dice_loss = DiceLoss(),
+    iou_loss = IoULoss(),
+)
 
 def parse_args(is_hyperion: bool) -> dict[str, Any]:
-    models = {
-        'Baseline': BaselineModel,
-        'BaselineNoBatchNorm': BaselineNoBatchNormModel,
-        'UNet': UNetModel,
-        'UNetNoBatchNormModel': UNetNoBatchNormModel,
-    }
-
     parser = argparse.ArgumentParser(description = 'Cityscapes!')
 
     parser.add_argument('--granularity', type = str, default = 'coarse', choices = ['fine', 'coarse'], help = 'Granularity of the dataset.')
     parser.add_argument('--lr', type = float, default = 1e-3, help = 'Learning rate')
+    parser.add_argument('--weight-decay', type = float, default = 0., help = 'L2 weight decay for AdamW classifier')
+    parser.add_argument('--gamma', type = float, default = 1, help = 'Learning rate decay every 10 epochs.')
     parser.add_argument('--epochs', type = int, default = 100 if is_hyperion else 2, help = 'Number of epochs')
     parser.add_argument('--batch-size', type = int, nargs = '?', help = 'Batch size')
-    parser.add_argument('--loss-fn', type = str, default = 'cross_entropy', choices = ['cross_entropy', 'dice_loss'], dest = 'loss_fn_name', help = 'Loss function.')
-    parser.add_argument('--model', default = 'Baseline', choices = models.keys(), dest = 'model_name', help = 'Which model to use.')
+    parser.add_argument('--loss-fn', type = str, default = 'cross_entropy', choices = losses.keys(), dest = 'loss_fn_name', help = 'Loss function.')
+    parser.add_argument('--model', default = 'Baseline', choices = Model.keys(), dest = 'model_name', help = 'Which model to use.')
     parser.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
-    parser.add_argument('--comment', type = str, help = 'Comment for wandb')
+    parser.add_argument('--label', type = str, help = 'Label for wandb artifact.')
+    parser.add_argument('--image-size', type = int, help = 'The square image size to use')
+    parser.add_argument('--device', type = str, choices = ['cuda', 'mps', 'cpu'], help = 'Which device to use')
+    parser.add_argument('--dropout', type = float, help = 'How much dropout to use (if applicable).')
 
     args = parser.parse_args()
 
-    if args.loss_fn_name == 'cross_entropy':
-        args.loss_fn = CrossEntropyLoss(reduction = 'sum')
-        args.accumulate_fn = lambda loss, loader: loss / len(loader.dataset)
-    elif args.loss_fn_name == 'dice_loss':
-        args.loss_fn = DiceLoss()
+    args.model = Model.instanciate(
+        args.model_name,
+        in_channels = 3,
+        out_channels = CityScapesDataset.n_classes,
+        dropout = args.dropout,
+    )
+
+    args.loss_fn = losses[args.loss_fn_name].clone()
+    if args.loss_fn_name == 'dice_loss':
         args.accumulate_fn = lambda loss, loader: loss / len(loader)
     else:
-        raise ValueError(f'Unknown loss function {args.loss_fn}')
+        args.accumulate_fn = lambda loss, leader: loss / len(loader.dataset)
 
     if args.optimiser_name == 'Adam':
         args.optimiser = Adam
@@ -59,10 +66,19 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     else:
         raise ValueError(f'Unknown optimiser {args.optimiser_name}')
 
-    args.model = models[args.model_name](3, CityScapesDataset.n_classes)
+    if args.device is None:
+        if torch.cuda.is_available():
+            args.device = 'cuda'
+        elif torch.backends.mps.is_available():
+            args.device = 'mps'
+        else:
+            raise RuntimeError('No GPU Device (explicitly run --device=cpu for CPU)')
 
     if args.batch_size is None:
         del args.batch_size
+
+    if args.image_size is None:
+        del args.image_size
 
     return vars(args)
 
@@ -77,24 +93,14 @@ def main():
         datefmt = '%Y-%m-%d %H:%M:%S',
     )
 
-    if torch.cuda.is_available():
-        device = 'cuda'
-    elif torch.backends.mps.is_available():
-        device = 'mps'
-    else:
-        logging.warn('No GPU backend; defaulting to CUDA.')
-        device = 'cuda'
-
     config = dict(
         random_seed = random_seed,
         n = None if is_hyperion else 10,
         batch_size = 64 if is_hyperion else 1,
         epochs = 300 if is_hyperion else 2,
         ignore_index = 0,
-        granularity = 'fine',
         image_size = 512,
         loss_fn = 'dice_loss',
-        device = device,
     )
     config |= parse_args(is_hyperion)
 
@@ -103,13 +109,13 @@ def main():
         config = config,
     )
 
-    train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/fine/train', n = config['n'], size = config['image_size'], train_transforms = True)
-    val_dataset = CityScapesDataset('data/leftImg8bit/val', 'data/fine/val', n = config['n'], size = config['image_size'])
+    train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/fine/train', n = config['n'], size = config['image_size'], config['granularity'], train_transforms = True)
+    val_dataset = CityScapesDataset('data/leftImg8bit/val', 'data/fine/val', n = config['n'], size = config['image_size'], config['granularity'], train_transforms = False)
 
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
     val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)
 
-    model = config['model'].to(device)
+    model = config['model'].to(config['device'])
 
     trainer = Trainer(model, train_dataloader, val_dataloader, config)
     trainer.train(epochs = config['epochs'])
