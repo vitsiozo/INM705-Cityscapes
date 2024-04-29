@@ -109,8 +109,8 @@ def main():
         config = config,
     )
 
-    train_dataset = CityScapesDataset('data/leftImg8bit/train', 'data/fine/train', n = config['n'], size = config['image_size'], config['granularity'], train_transforms = True)
-    val_dataset = CityScapesDataset('data/leftImg8bit/val', 'data/fine/val', n = config['n'], size = config['image_size'], config['granularity'], train_transforms = False)
+    train_dataset = CityScapesDataset('data/leftImg8bit/train', os.path.join('data', config['granularity'], 'train'), n = config['n'], size = config['image_size'], granularity = config['granularity'], train_transforms = True)
+    val_dataset = CityScapesDataset('data/leftImg8bit/val', os.path.join('data', config['granularity'], 'val'), n = config['n'], size = config['image_size'], granularity = config['granularity'], train_transforms = False)
 
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
     val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)

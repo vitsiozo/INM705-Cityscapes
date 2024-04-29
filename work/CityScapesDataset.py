@@ -28,18 +28,18 @@ class CityScapesDataset(Dataset):
                 if torch.rand(1) > 0.5:
                     image = transforms.functional.hflip(image)
                     mask = transforms.functional.hflip(mask)
-                
+
                 # Random rotation
                 angle = torch.randint(-10, 10, (1,)).item()
                 image = transforms.functional.rotate(image, angle)
                 mask = transforms.functional.rotate(mask, angle, interpolation=transforms.InterpolationMode.NEAREST)
 
             # Convert the image to a tensor
-            image = transforms.functional.to_tensor(image) 
+            image = transforms.functional.to_tensor(image)
             mask = torch.from_numpy(array(mask)).long()
 
             return image, mask
-        
+
         return apply_transforms
 
     def __init__(self, image_dir, mask_dir, n = None, size = 512, granularity = 'coarse', train_transforms = False):
