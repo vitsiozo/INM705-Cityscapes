@@ -15,12 +15,12 @@ from torch.utils.data import DataLoader
 from CityScapesDataset import CityScapesDataset
 from Trainer import Trainer
 from DiceLoss import DiceLoss
-from JaccardLoss import IoULoss
+from JaccardLoss import *
 
 from Model import Model
 
 losses = dict(
-    cross_entropy = CrossEntropyLoss(reduction = 'sum')
+    cross_entropy = CrossEntropyLoss(reduction = 'sum'),
     dice_loss = DiceLoss(),
     iou_loss = IoULoss(),
 )
@@ -39,6 +39,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
     parser.add_argument('--label', type = str, help = 'Label for wandb artifact.')
     parser.add_argument('--image-size', type = int, help = 'The square image size to use')
+    parser.add_argument('--no-resize', action = 'store_true', help = 'Do not resize the image')
     parser.add_argument('--device', type = str, choices = ['cuda', 'mps', 'cpu'], help = 'Which device to use')
     parser.add_argument('--dropout', type = float, help = 'How much dropout to use (if applicable).')
 
@@ -51,11 +52,11 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
         dropout = args.dropout,
     )
 
-    args.loss_fn = losses[args.loss_fn_name].clone()
-    if args.loss_fn_name == 'dice_loss':
-        args.accumulate_fn = lambda loss, loader: loss / len(loader)
+    args.loss_fn = losses[args.loss_fn_name]
+    if args.loss_fn_name == 'cross_entropy':
+        args.accumulate_fn = lambda loss, loader: loss / len(loader.dataset)
     else:
-        args.accumulate_fn = lambda loss, leader: loss / len(loader.dataset)
+        args.accumulate_fn = lambda loss, loader: loss / len(loader)
 
     if args.optimiser_name == 'Adam':
         args.optimiser = Adam
@@ -79,6 +80,9 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
 
     if args.image_size is None:
         del args.image_size
+
+    if args.no_resize:
+        args.image_size = None
 
     return vars(args)
 
@@ -105,11 +109,11 @@ def main():
     config |= parse_args(is_hyperion)
 
     wandb.init(
-        project = 'gregs',
+        project = 'work',
         config = config,
     )
 
-    train_dataset = CityScapesDataset('data/leftImg8bit/train', os.path.join('data', config['granularity'], 'train'), n = config['n'], size = config['image_size'], granularity = config['granularity'], train_transforms = True)
+    train_dataset = CityScapesDataset('data/leftImg8bit/train', os.path.join('data', config['granularity'], 'train'), n = config['n'], size = config['image_size'], granularity = config['granularity'], train_transforms = False)
     val_dataset = CityScapesDataset('data/leftImg8bit/val', os.path.join('data', config['granularity'], 'val'), n = config['n'], size = config['image_size'], granularity = config['granularity'], train_transforms = False)
 
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
@@ -117,7 +121,7 @@ def main():
 
     model = config['model'].to(config['device'])
 
-    trainer = Trainer(model, train_dataloader, val_dataloader, config)
+    trainer = Trainer(model, train_dataloader, val_dataloader, config, eval_losses = {'IoU score': IoUScore(), 'IoU score redux': OtherIoUScore()})
     trainer.train(epochs = config['epochs'])
 
 if __name__ == '__main__':

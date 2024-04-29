@@ -16,7 +16,7 @@ from CityScapesDataset import CityScapesDataset
 from DiceLoss import DiceLoss
 
 class Trainer:
-    def __init__(self, model, train_dataloader, val_dataloader, config):
+    def __init__(self, model, train_dataloader, val_dataloader, config, eval_losses = {}):
         self.config = config
         self.device = self.config['device']
 
@@ -36,6 +36,8 @@ class Trainer:
 
         self.criterion = config['loss_fn']
         self.accumulate_fn = config['accumulate_fn']
+
+        self.eval_losses = eval_losses
 
     def log_model(self, **metadata):
         torch.save(self.model.state_dict(), 'model.pth')
@@ -79,20 +81,24 @@ class Trainer:
     @torch.no_grad
     def eval_step(self, images, masks):
         outputs = self.model(images)
-        return self.criterion(outputs, masks)
+        extra_losses = {k: f(outputs, masks) for k, f in self.eval_losses.items()}
+        return self.criterion(outputs, masks), extra_losses
 
     def run_epoch(self, dataloader, training):
         # Sets training or eval mode.
         self.model.train(training)
 
         total_loss = tensor(0.).to(self.device)
+        total_extra_losses = {k: tensor(0.).to(self.device) for k in self.eval_losses.keys()}
         for e, (images, masks) in enumerate(dataloader, start = 1):
             images, masks = images.to(self.device), masks.to(self.device)
 
             if training:
                 loss = self.train_step(images, masks)
             else:
-                loss = self.eval_step(images, masks)
+                loss, extra_losses = self.eval_step(images, masks)
+                for k, v in extra_losses.items():
+                    total_extra_losses[k] += v.detach()
 
             lr = self.optimizer.param_groups[0]['lr']
             logging.info(f'Running {e}/{len(dataloader)}: lr = {lr:g}; partial loss = {loss / len(images):g}')
@@ -101,8 +107,10 @@ class Trainer:
 
         if training:
             self.scheduler.step()
+            return self.accumulate_fn(total_loss, dataloader)
 
-        return self.accumulate_fn(total_loss, dataloader)
+        eval_losses = {k: self.accumulate_fn(v, dataloader) for k, v in total_extra_losses.items()}
+        return self.accumulate_fn(total_loss, dataloader), eval_losses
 
     @staticmethod
     def apply_palette(mask, num_classes):
@@ -129,7 +137,7 @@ class Trainer:
         best_loss = float('inf')
         for epoch in range(1, epochs + 1):
             train_loss = self.run_epoch(self.train_dataloader, training = True)
-            val_loss = self.run_epoch(self.val_dataloader, training = False)
+            val_loss, extra = self.run_epoch(self.val_dataloader, training = False)
 
             if val_loss < best_loss:
                 logging.info('Best loss found!')
@@ -141,9 +149,9 @@ class Trainer:
                 'Train loss': train_loss,
                 'Val loss': val_loss,
                 'Best loss': best_loss,
-            }
+            } | extra
 
-            logging.info(f'Epoch {epoch}/{epochs}: train loss = {train_loss:g}, val loss = {val_loss:g}')
+            logging.info('\n'.join([f'Epoch {epoch}/{epochs}:'] + [f'{k}:\t{v:g}' for k, v in losses.items()]))
             wandb.log({'Epoch': epoch} | sample | losses)
 
         logging.info(f'Model final loss is {best_loss}')
