@@ -20,7 +20,7 @@ from JaccardLoss import IoULoss
 from Model import Model
 
 losses = dict(
-    cross_entropy = CrossEntropyLoss(reduction = 'sum')
+    cross_entropy = CrossEntropyLoss(reduction = 'sum'),
     dice_loss = DiceLoss(),
     iou_loss = IoULoss(),
 )
@@ -51,7 +51,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
         dropout = args.dropout,
     )
 
-    args.loss_fn = losses[args.loss_fn_name].clone()
+    args.loss_fn = losses[args.loss_fn_name]
     if args.loss_fn_name == 'dice_loss':
         args.accumulate_fn = lambda loss, loader: loss / len(loader)
     else:
