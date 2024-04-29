@@ -105,7 +105,7 @@ def main():
     config |= parse_args(is_hyperion)
 
     wandb.init(
-        project = 'gregs',
+        project = 'work',
         config = config,
     )
 
