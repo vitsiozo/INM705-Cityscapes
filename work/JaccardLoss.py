@@ -34,19 +34,23 @@ class IoUScore(IoULoss):
 
     def forward(self, preds: FloatTensor, labels: LongTensor) -> FloatTensor:
         best = F.one_hot(preds.argmax(dim = 1), num_classes = preds.size(1)).permute((0, 3, 1, 2)).to(torch.float32)
-        return 100 * (1 - super().forward(best, labels))
+        return (1 - super().forward(best, labels))
 
-class InstanceIoULoss(nn.Module):
-    def __init__(self):
+class OtherIoUScore(nn.Module):
+    def __init__(self, ignore = None):
         super().__init__()
 
+        if ignore is None:
+            ignore = -1
+        self.ignore = ignore
+
     def forward(self, preds: FloatTensor, labels: LongTensor) -> FloatTensor:
-        probs = preds.softmax(dim = 1)
-        one_hot = F.one_hot(labels, num_classes = preds.size(1)).permute((0, 3, 1, 2))
+        guesses = F.one_hot(preds.argmax(dim = 1), num_classes = preds.size(1)).permute((0, 3, 1, 2))
+        ground  = F.one_hot(labels, num_classes = preds.size(1)).permute((0, 3, 1, 2))
 
-        intersection = torch.sum(probs * one_hot, dim = (2, 3))
-        union = torch.sum(probs + one_hot, dim = (2, 3)) - intersection
+        valid = labels != 0
+        tp = torch.sum( guesses &  ground, dim = 1)
+        fp = torch.sum( guesses & ~ground, dim = 1)
+        fn = torch.sum(~guesses &  ground, dim = 1)
 
-        iou = intersection / union.clamp(min = 1e-6)
-
-        return 1 - iou.mean()
+        return (tp / (tp + fp + fn))[valid].mean()

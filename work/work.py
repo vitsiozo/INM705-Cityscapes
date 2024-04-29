@@ -121,7 +121,7 @@ def main():
 
     model = config['model'].to(config['device'])
 
-    trainer = Trainer(model, train_dataloader, val_dataloader, config, eval_losses = {'IoU score': IoUScore()})
+    trainer = Trainer(model, train_dataloader, val_dataloader, config, eval_losses = {'IoU score': IoUScore(), 'IoU score redux': OtherIoUScore()})
     trainer.train(epochs = config['epochs'])
 
 if __name__ == '__main__':
