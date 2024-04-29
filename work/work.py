@@ -39,6 +39,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
     parser.add_argument('--label', type = str, help = 'Label for wandb artifact.')
     parser.add_argument('--image-size', type = int, help = 'The square image size to use')
+    parser.add_argument('--no-resize', action = 'store_true', help = 'Do not resize the image')
     parser.add_argument('--device', type = str, choices = ['cuda', 'mps', 'cpu'], help = 'Which device to use')
     parser.add_argument('--dropout', type = float, help = 'How much dropout to use (if applicable).')
 
@@ -80,6 +81,9 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     if args.image_size is None:
         del args.image_size
 
+    if args.no_resize:
+        args.image_size = None
+
     return vars(args)
 
 def main():
@@ -109,7 +113,7 @@ def main():
         config = config,
     )
 
-    train_dataset = CityScapesDataset('data/leftImg8bit/train', os.path.join('data', config['granularity'], 'train'), n = config['n'], size = config['image_size'], granularity = config['granularity'], train_transforms = True)
+    train_dataset = CityScapesDataset('data/leftImg8bit/train', os.path.join('data', config['granularity'], 'train'), n = config['n'], size = config['image_size'], granularity = config['granularity'], train_transforms = False)
     val_dataset = CityScapesDataset('data/leftImg8bit/val', os.path.join('data', config['granularity'], 'val'), n = config['n'], size = config['image_size'], granularity = config['granularity'], train_transforms = False)
 
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)

@@ -12,14 +12,14 @@ class CityScapesDataset(Dataset):
 
     @staticmethod
     def get_transforms(size, train_transforms=False):
-        # Resize transformations separately for the image and the mask
-        image_resize = transforms.Resize((size, size))
-        mask_resize = transforms.Resize((size, size), interpolation=transforms.InterpolationMode.NEAREST)
-
         def apply_transforms(image, mask):
-            # Apply the respective resize transformations
-            image = image_resize(image)
-            mask = mask_resize(mask)
+            if size is not None:
+                # Resize transformations separately for the image and the mask
+                image_resize = transforms.Resize((size, size))
+                mask_resize = transforms.Resize((size, size), interpolation=transforms.InterpolationMode.NEAREST)
+
+                image = image_resize(image)
+                mask = mask_resize(mask)
 
             # Apply random transforms if specified
             if train_transforms:
