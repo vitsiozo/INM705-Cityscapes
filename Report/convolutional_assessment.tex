@@ -97,7 +97,25 @@ The last architecture we employed in our study was a Vision Transformer (ViT), w
     \label{fig:vit-arch}
 \end{figure}
 
-Vision transformers can achieve excellent results, outperforming many advanced CNN architectures, particularly when pre-trained on very large datasets. The model's performance increases with the size of the transformer (number of layers and attention heads) and the size of the input resolution. The approach simplifies the standard image processing pipeline by eliminating the need for many typical components of CNNs like convolutional layers. This makes the architecture simpler and potentially easier to adapt and maintain. 
+Vision transformers can achieve excellent results, outperforming many advanced CNN architectures, particularly when pre-trained on very large datasets. However, the computational complexity especially when applied on high-resolution images increases rapidly, especially for dense prediction tasks like semantic segmentation. For this reason, an improved approach has been suggested as the Swin Transformer model \cite{DBLP:journals/corr/abs-2103-14030}. In contrast to the Vision Transformer that processes the entire image at once by dividing it into fixed-size patches and applying global self-attention to all patches, the Swin transformer divides the image into smaller, non overlapping windows and applies local window-based self-attention (Figure \ref{fig:swintransform}(a)). This reduces the computational complexity because the number of interactions is limited to within a window rather than across the entire image. Additionally, the Swin transformer introduces a novel mechanism of shifting these windows in alternate layers, thus enabling cross-window connections. This helps in integrating local and global contextual information more effectively (Figure \ref{fig:swintransform}(b)). Finally, the fact that the Swin transformer starts with smaller windows and gradually merges them, reducing resolution while increasing the depth of features, enables a hierarchical architecture that processes features at multiple scales. This is beneficial for various vision tasks like object detection and segmentation, where multi-scale features are crucial. These advantages make the Swin transformer suitable as a general purpose backbone for various vision tasks. 
+
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{teaser11.png}
+        \caption{ViT vs Swin transformer}
+        \label{fig:swin-vit}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{teaser_v4.png}
+        \caption{The shifted window technique}
+        \label{fig:shiftwindow}
+    \end{subfigure}
+    \caption{Characteristics of the Swin transformer\cite{DBLP:journals/corr/abs-2103-14030}}
+    \label{fig:swintransform}
+\end{figure}
 
 \section{Methodology}
 
