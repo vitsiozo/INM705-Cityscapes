@@ -15,8 +15,15 @@ from torch.utils.data import DataLoader
 from CityScapesDataset import CityScapesDataset
 from Trainer import Trainer
 from DiceLoss import DiceLoss
+from JaccardLoss import IoULoss
 
 from Model import Model
+
+losses = dict(
+    cross_entropy = CrossEntropyLoss(reduction = 'sum')
+    dice_loss = DiceLoss(),
+    iou_loss = IoULoss(),
+)
 
 def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser = argparse.ArgumentParser(description = 'Cityscapes!')
@@ -27,7 +34,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     parser.add_argument('--gamma', type = float, default = 1, help = 'Learning rate decay every 10 epochs.')
     parser.add_argument('--epochs', type = int, default = 100 if is_hyperion else 2, help = 'Number of epochs')
     parser.add_argument('--batch-size', type = int, nargs = '?', help = 'Batch size')
-    parser.add_argument('--loss-fn', type = str, default = 'cross_entropy', choices = ['cross_entropy', 'dice_loss'], dest = 'loss_fn_name', help = 'Loss function.')
+    parser.add_argument('--loss-fn', type = str, default = 'cross_entropy', choices = losses.keys(), dest = 'loss_fn_name', help = 'Loss function.')
     parser.add_argument('--model', default = 'Baseline', choices = Model.keys(), dest = 'model_name', help = 'Which model to use.')
     parser.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
     parser.add_argument('--label', type = str, help = 'Label for wandb artifact.')
@@ -44,14 +51,11 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
         dropout = args.dropout,
     )
 
-    if args.loss_fn_name == 'cross_entropy':
-        args.loss_fn = CrossEntropyLoss(reduction = 'sum')
-        args.accumulate_fn = lambda loss, loader: loss / len(loader.dataset)
-    elif args.loss_fn_name == 'dice_loss':
-        args.loss_fn = DiceLoss()
+    args.loss_fn = losses[args.loss_fn_name].clone()
+    if args.loss_fn_name == 'dice_loss':
         args.accumulate_fn = lambda loss, loader: loss / len(loader)
     else:
-        raise ValueError(f'Unknown loss function {args.loss_fn}')
+        args.accumulate_fn = lambda loss, leader: loss / len(loader.dataset)
 
     if args.optimiser_name == 'Adam':
         args.optimiser = Adam
