@@ -8,11 +8,13 @@ class IoULoss(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, preds: FloatTensor, labels: LongTensor):
+    def forward(self, preds: FloatTensor, labels: LongTensor) -> FloatTensor:
+        probs = preds.softmax(dim = 1)
         one_hot = F.one_hot(labels, num_classes = preds.size(1)).permute((0, 3, 1, 2))
 
-        intersection = torch.sum(preds * one_hot, dim = (2, 3))
-        union = torch.sum(preds + one_hot, dim = (2, 3))
+        intersection = torch.sum(probs * one_hot, dim = (2, 3))
+        union = torch.sum(probs + one_hot, dim = (2, 3)) - intersection
 
-        iou = intersection / union
-        return 1 - iou.sum()
+        iou = intersection / union.clamp(min = 1e-6)
+
+        return 1 - iou.mean()

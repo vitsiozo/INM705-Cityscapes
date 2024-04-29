@@ -52,10 +52,10 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     )
 
     args.loss_fn = losses[args.loss_fn_name]
-    if args.loss_fn_name == 'dice_loss':
-        args.accumulate_fn = lambda loss, loader: loss / len(loader)
+    if args.loss_fn_name == 'cross_entropy':
+        args.accumulate_fn = lambda loss, loader: loss / len(loader.dataset)
     else:
-        args.accumulate_fn = lambda loss, leader: loss / len(loader.dataset)
+        args.accumulate_fn = lambda loss, loader: loss / len(loader)
 
     if args.optimiser_name == 'Adam':
         args.optimiser = Adam
