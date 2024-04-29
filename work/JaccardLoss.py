@@ -53,4 +53,7 @@ class OtherIoUScore(nn.Module):
         fp = torch.sum( guesses & ~ground, dim = 1)
         fn = torch.sum(~guesses &  ground, dim = 1)
 
-        return (tp / (tp + fp + fn))[valid].mean()
+        intersection = torch.sum(torch.where(valid, tp, 0), dim = (1, 2))
+        union = torch.sum(torch.where(valid, tp + fp + fn, 0), dim = (1, 2))
+
+        return 100 * torch.mean(intersection / union)
