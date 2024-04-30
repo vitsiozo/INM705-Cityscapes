@@ -88,7 +88,7 @@ Further improving upon the architecture of the fully convolutional network, the 
 \end{figure}
 It consists of two main parts: the left side of the U-net is the contracting path (encoder) which is designed to capture the context of the input image. This path is essentially a typical convolutional network that consists of repeated application of convolutions, followed by rectified linear unit (ReLU) activations, and max pooling for downsampling. Each of these steps helps in capturing the features at different levels of abstraction. On the right side of the network is the expansive path (Decoder), which performs the task of precise localization using transposed convolutions for upsampling. This part of the network gradually recovers the spatial dimensions and detail of the input image. The upsampling in the expansive path is combined with the high-resolution features from the contracting path via skip connections. These connections are crucial as they help in propagating context information to higher resolution layers, which enhances the accuracy of the output segmentation maps. U-Net's design is particularly effective in providing good segmentation results even with small training datasets, which has led to its widespread adoption and adaptation in different segmentation tasks beyond its initial medical imaging focus.
 
-The last architecture we employed in our study was a Vision Transformer (ViT), which is a novel approach to applying transformer models, primarily used in Natural Language Processing (NLP) tasks, to image recognition. In the paper "An Image is worth 16$\times$16 Words: Transformers for Image Recognition at scale" \cite{DBLP:journals/corr/abs-2010-11929}, the authors proposed a method that treats an image as a sequence of fixed-size patches (similar to words in NLP). Each patch is embedded similarly to how tokens are embedded in NLP, and then processed by a standard transformer encoder. An overview of this model is depicted in Figure \ref{fig:vit-arch}.
+The last architecture we explored in our study was a Vision Transformer (ViT), which is a novel approach to applying transformer models, primarily used in Natural Language Processing (NLP) tasks, to image recognition. In the paper "An Image is worth 16$\times$16 Words: Transformers for Image Recognition at scale" \cite{DBLP:journals/corr/abs-2010-11929}, the authors proposed a method that treats an image as a sequence of fixed-size patches (similar to words in NLP). Each patch is embedded similarly to how tokens are embedded in NLP, and then processed by a standard transformer encoder. An overview of this model is depicted in Figure \ref{fig:vit-arch}.
 
 \begin{figure}[H]
     \centering 
@@ -97,7 +97,7 @@ The last architecture we employed in our study was a Vision Transformer (ViT), w
     \label{fig:vit-arch}
 \end{figure}
 
-Vision transformers can achieve excellent results, outperforming many advanced CNN architectures, particularly when pre-trained on very large datasets. However, the computational complexity especially when applied on high-resolution images increases rapidly, especially for dense prediction tasks like semantic segmentation. For this reason, an improved approach has been suggested as the Swin Transformer model \cite{DBLP:journals/corr/abs-2103-14030}. In contrast to the Vision Transformer that processes the entire image at once by dividing it into fixed-size patches and applying global self-attention to all patches, the Swin transformer divides the image into smaller, non overlapping windows and applies local window-based self-attention (Figure \ref{fig:swintransform}(a)). This reduces the computational complexity because the number of interactions is limited to within a window rather than across the entire image. Additionally, the Swin transformer introduces a novel mechanism of shifting these windows in alternate layers, thus enabling cross-window connections. This helps in integrating local and global contextual information more effectively (Figure \ref{fig:swintransform}(b)). Finally, the fact that the Swin transformer starts with smaller windows and gradually merges them, reducing resolution while increasing the depth of features, enables a hierarchical architecture that processes features at multiple scales. This is beneficial for various vision tasks like object detection and segmentation, where multi-scale features are crucial. These advantages make the Swin transformer suitable as a general purpose backbone for various vision tasks. 
+Vision transformers can achieve excellent results, outperforming many advanced CNN architectures, particularly when pre-trained on very large datasets. However, the computational complexity especially when applied on high-resolution images increases rapidly, especially for dense prediction tasks like semantic segmentation. For this reason, an improved approach has been suggested called the Swin Transformer model \cite{DBLP:journals/corr/abs-2103-14030}. In contrast to the Vision Transformer that processes the entire image at once by dividing it into fixed-size patches and applying global self-attention to all patches, the Swin transformer divides the image into smaller, non overlapping windows and applies local window-based self-attention (Figure \ref{fig:swintransform}(a)). This reduces the computational complexity because the number of interactions is limited to within a window rather than across the entire image. Additionally, the Swin transformer introduces a novel mechanism of shifting these windows in alternate layers, thus enabling cross-window connections. This helps in integrating local and global contextual information more effectively (Figure \ref{fig:swintransform}(b)). Finally, the fact that the Swin transformer starts with smaller windows and gradually merges them, reducing resolution while increasing the depth of features, enables a hierarchical architecture that processes features at multiple scales. This is beneficial for various vision tasks like object detection and segmentation, where multi-scale features are crucial. These advantages make the Swin transformer suitable as a general purpose backbone for various vision tasks and as will be explained later, we found this model to perform very well in our particular study.
 
 \begin{figure}[ht]
     \centering
@@ -118,6 +118,56 @@ Vision transformers can achieve excellent results, outperforming many advanced C
 \end{figure}
 
 \section{Methodology}
+
+Our code is made up of the following parts: \\
+The \textbf{work.py} file sets up the training pipeline for our segmentation task. After loading all the necessary libraries, we use the function \textbf{parse\_args} to define and parse command-line arguments. Using this function  we specify the model to be used in our experiment, as well as the model-specific parameters, like learning rate, weight decay, batch size, number of epochs, optimiser etc. The function can also check for which device to use (cuda, mps or cpu) depending on the platform that we run our code and handles default and edge cases (like when no image size or batch size is specified). The function very usefully also offers a help option that will list and describe all the available options to the user. 
+
+The \textbf{main()} function orchestrates the execution flow. We initialize random seed for reproducibility, set up logging, and merge the default configuration with the command-line arguments using the parsed results. We initialise \textbf{wandb} for tracking our experiment and prepare the datasets and dataloaders for training and validation. We instantiate the model and move it to the designated device (CPU or GPU) and finally create a \textbf{Trainer} object with the model, dataloaders, and configuration and start the training process by instantiating the \textbf{Trainer} class and calling the \textbf{train} method. 
+
+The \textbf{Trainer.py} performs several functions. It handles the logging of the best model's weights to wandb as 'Artifacts' for tracking and versioning. It performs a single training step by computing the model's output, calculating the loss using the defined loss criterion and updates the model weights based on the gradients. It also conducts an evaluation step, this time without gradient calculation, and updates the evaluation loss metric \textbf{'eval\_losses'}. The training process is iterated over the number of epochs, during which we execute the training and validation steps, log the performance and check for improvement in validation loss in order to save the best model state. Finally we log the training and validation losses to wandb for monitoring. 
+
+The \textbf{model.py} file enables us to dynamically instantiate different models that are used for our analysis by mapping the model names stored on the \textbf{'models'} dictionary to the corresponding architectures. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \section{Results}
 
