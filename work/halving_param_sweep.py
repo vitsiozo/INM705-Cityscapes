@@ -78,7 +78,7 @@ def run_sweep(train_dataloader, val_dataloader, config):
         config['batches_per_epoch'] = 2994 // config['batch_size'] // len(params)
 
         logging.info(f"New sweep halving! {len(params)} left; n = {config['batches_per_epoch']}")
-        if len(params) <= 10:
+        if len(params) <= 16:
             print('\n'.join(params))
 
         results = []
@@ -118,7 +118,7 @@ def main():
     config = dict(
         random_seed = random_seed,
         batch_size = 16 if is_hyperion else 1,
-        epochs = 25 if is_hyperion else 2,
+        epochs = 20 if is_hyperion else 2,
         label = 'sweep',
         no_log_models = True,
     )
