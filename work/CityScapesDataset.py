@@ -21,9 +21,7 @@ class CityScapesDataset(Dataset):
                 image = image_resize(image)
                 mask = mask_resize(mask)
 
-            # Apply random transforms if specified
             if train_transforms:
-                #print(f'Hey, I am applying random transforms')
                 # Random horizontal flip
                 if torch.rand(1) > 0.5:
                     image = transforms.functional.hflip(image)
@@ -35,7 +33,7 @@ class CityScapesDataset(Dataset):
                 mask = transforms.functional.rotate(mask, angle, interpolation=transforms.InterpolationMode.NEAREST)
 
             # Convert the image to a tensor
-            image = transforms.functional.to_tensor(image)
+            image = transforms.functional.to_dtype(transforms.functional.to_image(image), dtype = torch.float32, scale = True)
             mask = torch.from_numpy(array(mask)).long()
 
             return image, mask

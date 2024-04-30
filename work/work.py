@@ -19,13 +19,13 @@ from JaccardLoss import *
 
 from Model import Model
 
-losses = dict(
-    cross_entropy = CrossEntropyLoss(reduction = 'sum', ignore_index = 0),
-    dice_loss = DiceLoss(),
-    iou_loss = IoULoss(),
-)
-
 def parse_args(is_hyperion: bool) -> dict[str, Any]:
+    losses = dict(
+        cross_entropy = CrossEntropyLoss(reduction = 'sum', ignore_index = 0),
+        dice_loss = DiceLoss(),
+        iou_loss = IoULoss(),
+    )
+
     parser = argparse.ArgumentParser(description = 'Cityscapes!')
 
     parser.add_argument('--granularity', type = str, default = 'coarse', choices = ['fine', 'coarse'], help = 'Granularity of the dataset.')
@@ -104,7 +104,7 @@ def main():
         epochs = 300 if is_hyperion else 2,
         ignore_index = 0,
         image_size = 512,
-        loss_fn = 'dice_loss',
+        batches_per_epoch = None,
     )
     config |= parse_args(is_hyperion)
 
@@ -113,8 +113,8 @@ def main():
         config = config,
     )
 
-    train_dataset = CityScapesDataset('data/leftImg8bit/train', os.path.join('data', config['granularity'], 'train'), n = config['n'], size = config['image_size'], granularity = config['granularity'], train_transforms = False)
-    val_dataset = CityScapesDataset('data/leftImg8bit/val', os.path.join('data', config['granularity'], 'val'), n = config['n'], size = config['image_size'], granularity = config['granularity'], train_transforms = False)
+    train_dataset = CityScapesDataset('data/leftImg8bit/train', os.path.join('data', config['granularity'], 'train'), n = config['n'], size = config['image_size'], granularity = config['granularity'])
+    val_dataset = CityScapesDataset('data/leftImg8bit/val', os.path.join('data', config['granularity'], 'val'), n = config['n'], size = config['image_size'], granularity = config['granularity'])
 
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
     val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)
