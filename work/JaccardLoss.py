@@ -72,6 +72,7 @@ class InstanceIoUScore(nn.Module):
         one_hot_preds = F.one_hot(preds, num_classes = num_classes).permute(0, 3, 1, 2)
         one_hot_labels = F.one_hot(labels, num_classes = num_classes).permute(0, 3, 1, 2)
 
+        # Torch handles dimensionality expansions nicely.
         mask = torch.unsqueeze(labels != self.ignore_index, dim = 1)
         one_hot_preds = one_hot_preds * mask
         one_hot_labels = one_hot_labels * mask
@@ -80,7 +81,7 @@ class InstanceIoUScore(nn.Module):
         fp = torch.sum( one_hot_preds & ~one_hot_labels, dim = (2, 3))
         fn = torch.sum(~one_hot_preds &  one_hot_labels, dim = (2, 3))
 
-        size = one_hot_labels.size(2) * one_hot_labels.size(3)
+        size = mask.sum(dim = (2, 3))
         weights = one_hot_labels.sum(dim = (2, 3)) / size
 
         itp = weights * tp
