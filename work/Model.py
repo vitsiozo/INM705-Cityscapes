@@ -26,6 +26,7 @@ class Model:
         'NewBaseline': NewBaselineModel,
         'ResnetBaseline': ResnetBaseline,
         'BetterResnetBaseline': ResnetBaseline,
+        'SimpleFCN': SimpleFCN,
     }
 
     @classmethod
