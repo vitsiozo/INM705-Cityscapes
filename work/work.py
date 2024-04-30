@@ -20,7 +20,7 @@ from JaccardLoss import *
 from Model import Model
 
 losses = dict(
-    cross_entropy = CrossEntropyLoss(reduction = 'sum'),
+    cross_entropy = CrossEntropyLoss(reduction = 'sum', ignore_index = 0),
     dice_loss = DiceLoss(),
     iou_loss = IoULoss(),
 )
@@ -121,7 +121,7 @@ def main():
 
     model = config['model'].to(config['device'])
 
-    trainer = Trainer(model, train_dataloader, val_dataloader, config, eval_losses = {'IoU score': IoUScore(), 'IoU score redux': OtherIoUScore()})
+    trainer = Trainer(model, train_dataloader, val_dataloader, config, eval_losses = {'Old IoU': IoUScore(), 'IoU Score': OtherIoUScore()})
     trainer.train(epochs = config['epochs'])
 
 if __name__ == '__main__':

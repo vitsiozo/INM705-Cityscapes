@@ -10,6 +10,7 @@ from models.Swin2Model import Swin2Model
 from models.Swin2BaseModel import Swin2BaseModel
 from models.Swin2LargeModel import Swin2LargeModel
 from models.NewBaselineModel import NewBaselineModel
+from models.ResnetBaseline import *
 
 class Model:
     models = {
@@ -23,6 +24,8 @@ class Model:
         'Swin2Base': Swin2BaseModel,
         'Swin2Large': Swin2LargeModel,
         'NewBaseline': NewBaselineModel,
+        'ResnetBaseline': ResnetBaseline,
+        'BetterResnetBaseline': ResnetBaseline,
     }
 
     @classmethod
