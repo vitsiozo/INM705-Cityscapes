@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from CityScapesDataset import CityScapesDataset
 from torch.utils.data import DataLoader
 
-device = 'cuda'
+device = 'cpu'
 
 @torch.no_grad()
 def main():
@@ -14,16 +14,12 @@ def main():
 
     class_sums = torch.zeros(34).to(device)
     for e, (_, mask) in enumerate(train_dataloader):
-        if e % 100 == 0:
-            print(f'{e} / {len(train_dataloader.dataset)}')
-
+        print(f'{e} / {len(train_dataloader)}')
         mask = mask.to(device)
-
-        mask_1h = F.one_hot(mask, 34).permute((0, 3, 1, 2))
-        sums = mask_1h.sum(dim = (0, 2, 3))
+        sums = mask.flatten().bincount()
         class_sums += sums
 
-    print(enumerate(class_sums.cpu()))
+    print(class_sums.cpu().tolist())
 
 if __name__ == '__main__':
     main()

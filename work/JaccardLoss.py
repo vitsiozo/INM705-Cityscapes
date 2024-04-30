@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch import tensor
 
 import torch.nn.functional as F
 from torch import FloatTensor, LongTensor
@@ -58,6 +59,18 @@ class IoUScore(nn.Module):
         return 100 * iou.mean()
 
 class InstanceIoUScore(nn.Module):
+    # Total amount of pixels of this instance in 768 x 768 images.
+    # Calculated using calculate_weights.py.
+    instance_inv_sums = tensor([
+        515257920, 80242488, 22716522, 27322400, 0, 0,
+        262198, 510640960, 48721176, 2616676, 896892, 227768096,
+        6251469, 9440081, 146116, 655928, 338741, 6654748,
+        0, 1184962, 4447795, 148047248, 6715583, 40057328,
+        9196087, 845308, 73100160, 2680537, 2653371, 148543,
+        70536, 2323841, 667847, 2654887,
+     ])
+    instance_inv_ratio = instance_inv_sums / instance_inv_sums.sum()
+
     def __init__(self, ignore_index = None):
         super().__init__()
 
@@ -81,9 +94,7 @@ class InstanceIoUScore(nn.Module):
         fp = torch.sum( one_hot_preds & ~one_hot_labels, dim = (2, 3))
         fn = torch.sum(~one_hot_preds &  one_hot_labels, dim = (2, 3))
 
-        size = mask.sum(dim = (2, 3))
-        weights = one_hot_labels.sum(dim = (2, 3)) / size
-
+        weights = 1 / self.instance_inv_ratio.to(preds.device).clamp(min = 1e-6)
         itp = weights * tp
         ifn = weights * fn
 
