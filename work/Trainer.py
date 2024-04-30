@@ -16,7 +16,7 @@ from CityScapesDataset import CityScapesDataset
 from DiceLoss import DiceLoss
 
 class Trainer:
-    def __init__(self, model, train_dataloader, val_dataloader, config, eval_losses = {}):
+    def __init__(self, model, train_dataloader, val_dataloader, config, wandb_run = None, eval_losses = {}):
         self.config = config
         self.device = self.config['device']
 
@@ -39,7 +39,12 @@ class Trainer:
 
         self.eval_losses = eval_losses
 
+        self.wandb = wandb_run or wandb
+
     def log_model(self, **metadata):
+        if self.config.get('no_log_models', False):
+            return
+
         torch.save(self.model.state_dict(), 'model.pth')
 
         api = wandb.Api()
@@ -52,7 +57,7 @@ class Trainer:
         labels = [wandb_label]
         if self.config['label'] is not None:
             labels.append(self.config['label'])
-        wandb.log_artifact(artifact, aliases = labels)
+        self.wandb.log_artifact(artifact, aliases = labels)
 
         if self.artifact_to_delete is not None:
             logging.info(f'Deleting old artifact with ID {self.artifact_to_delete.id}')
@@ -105,6 +110,9 @@ class Trainer:
 
             total_loss += loss
 
+            if self.config['batches_per_epoch'] is not None and e >= self.config['batches_per_epoch']:
+                break
+
         if training:
             self.scheduler.step()
             return self.accumulate_fn(total_loss, dataloader)
@@ -152,6 +160,7 @@ class Trainer:
             } | extra
 
             logging.info('\n'.join([f'Epoch {epoch}/{epochs}:'] + [f'{k}:\t{v:g}' for k, v in losses.items()]))
-            wandb.log({'Epoch': epoch} | sample | losses)
+            self.wandb.log({'Epoch': epoch} | sample | losses)
 
         logging.info(f'Model final loss is {best_loss}')
+        return best_loss
