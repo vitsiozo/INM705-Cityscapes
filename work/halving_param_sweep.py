@@ -75,11 +75,11 @@ def parameter_sweep(sweep_dropout: bool) -> list[dict[str, float]]:
 def run_sweep(train_dataloader, val_dataloader, config):
     params = parameter_sweep(config['sweep_dropout'])
     while len(params) > 1:
-        config['batches_per_epoch'] = 2994 // config['batch_size'] // len(params)
+        config['batches_per_epoch'] = max(1, (config['n'] or 2994) // config['batch_size'] // len(params))
 
         logging.info(f"New sweep halving! {len(params)} left; n = {config['batches_per_epoch']}")
         if len(params) <= 16:
-            print('\n'.join(params))
+            logging.info(params)
 
         results = []
         for param_set in params:
@@ -91,15 +91,15 @@ def run_sweep(train_dataloader, val_dataloader, config):
                 dropout = param_set.get('dropout', None),
             ).to(config['device'])
 
-            run = wandb.init(project = 'work', config = config)
-            trainer = Trainer(model, train_dataloader, val_dataloader, config | param_set, wandb_run = run)
+            run = wandb.init(project = 'work_sweep', config = config)
+            trainer = Trainer(model, train_dataloader, val_dataloader, config | param_set, wandb_run = run, eval_losses = {'IoU Score': IoUScore(ignore_index = 0), 'iIoU Score': InstanceIoUScore(ignore_index = 0)})
             loss = trainer.train(config['epochs'])
             run.finish()
 
             results.append((loss, param_set))
 
         results.sort(key = lambda x: x[0])
-        params = results[len(results) // 2:]
+        params = [p for _, p in results[len(results) // 2:]]
 
     logging.info('We have a winner!')
     return params[0]
@@ -121,6 +121,7 @@ def main():
         epochs = 20 if is_hyperion else 2,
         label = 'sweep',
         no_log_models = True,
+        n = None if is_hyperion else 10,
     )
     config |= parse_args(is_hyperion)
 
@@ -130,8 +131,7 @@ def main():
     train_dataloader = DataLoader(train_dataset, batch_size = config['batch_size'], shuffle = True)
     val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)
 
-    best_loss, best_model = run_sweep(train_dataloader, val_dataloader, config)
-    print(f'Best loss: {best_loss}')
+    best_model = run_sweep(train_dataloader, val_dataloader, config)
     print(f'Best model parameters: {best_model}')
 
 if __name__ == '__main__':

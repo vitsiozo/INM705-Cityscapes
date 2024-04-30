@@ -97,7 +97,7 @@ class Trainer:
         total_extra_losses = {k: tensor(0.).to(self.device) for k in self.eval_losses.keys()}
         batches = self.config['batches_per_epoch'] or len(dataloader)
         for e, (images, masks) in enumerate(dataloader, start = 1):
-            if e >= batches:
+            if e > batches:
                 break
 
             images, masks = images.to(self.device), masks.to(self.device)
@@ -132,6 +132,9 @@ class Trainer:
         return color_mask
 
     def get_sample(self):
+        if self.config.get('no_log_models', False):
+            return {}
+
         image, mask_true = self.val_example
         with torch.no_grad():
             mask_pred = self.model(image.unsqueeze(0).to(self.device)).squeeze(0).argmax(dim = 0).cpu()
