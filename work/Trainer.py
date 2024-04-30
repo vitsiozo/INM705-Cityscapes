@@ -95,7 +95,11 @@ class Trainer:
 
         total_loss = tensor(0.).to(self.device)
         total_extra_losses = {k: tensor(0.).to(self.device) for k in self.eval_losses.keys()}
+        batches = self.config['batches_per_epoch'] or len(dataloader)
         for e, (images, masks) in enumerate(dataloader, start = 1):
+            if e >= batches:
+                break
+
             images, masks = images.to(self.device), masks.to(self.device)
 
             if training:
@@ -106,12 +110,9 @@ class Trainer:
                     total_extra_losses[k] += v.detach()
 
             lr = self.optimizer.param_groups[0]['lr']
-            logging.info(f'Running {e}/{len(dataloader)}: lr = {lr:g}; partial loss = {loss / len(images):g}')
+            logging.info(f'Running {e}/{batches}: lr = {lr:g}; partial loss = {loss / len(images):g}')
 
             total_loss += loss
-
-            if self.config['batches_per_epoch'] is not None and e >= self.config['batches_per_epoch']:
-                break
 
         if training:
             self.scheduler.step()
