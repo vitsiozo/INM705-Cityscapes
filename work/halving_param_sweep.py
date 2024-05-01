@@ -62,13 +62,13 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
 # Returns a list of parameters to sweep.
 def parameter_sweep(sweep_dropout: bool) -> list[dict[str, float]]:
     params = dict(
-        lr = [1e-2, 1e-3, 1e-4],
+        lr = [1e-3, 1e-4],
         gamma = [1., math.sqrt(1/10), 1/10],
         weight_decay = [0., 1e-4],
     )
 
     if sweep_dropout:
-        params['dropout'] = [0., 1/20, 1/10],
+        params['dropout'] = [0., 1/20, 1/10]
 
     return [dict(zip(params.keys(), x)) for x in product(*params.values())]
 
@@ -99,7 +99,7 @@ def run_sweep(train_dataloader, val_dataloader, config):
             results.append((loss, param_set))
 
         results.sort(key = lambda x: x[0])
-        params = [p for _, p in results[len(results) // 2:]]
+        params = [p for _, p in results[:len(results) // 2]]
 
     logging.info('We have a winner!')
     return params[0]

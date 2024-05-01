@@ -7,18 +7,17 @@
 \usepackage{xcolor}
 \usepackage{float}
 \usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage[labelfont=bf]{caption}
+\usepackage{titlesec}
+\usepackage{float}
 
-\usepackage[hyperindex,breaklinks]{hyperref}
-% Optional customization
-\hypersetup{
-    colorlinks=true,
-    citecolor=green,
-    linkcolor=red,
-    filecolor=magenta,      
-    urlcolor=cyan,
-}
+\usepackage[hypertexnames=false,hidelinks]{hyperref}
+\usepackage[noabbrev,nameinlink,capitalize]{cleveref}
 
-\bibliographystyle{plain}
+\captionsetup{font=footnotesize}
+\bibliographystyle{unsrt}
 
 \begin{document}
 
@@ -45,6 +44,8 @@
 \input{Dataset}
 
 \input{Architecture}
+
+\clearpage{}
 
 \input{Methodology}
 
