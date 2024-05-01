@@ -68,7 +68,7 @@ def parameter_sweep(sweep_dropout: bool) -> list[dict[str, float]]:
     )
 
     if sweep_dropout:
-        params['dropout'] = [0., 1/20, 1/10],
+        params['dropout'] = [0., 1/20, 1/10]
 
     return [dict(zip(params.keys(), x)) for x in product(*params.values())]
 
