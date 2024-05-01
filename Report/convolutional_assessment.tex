@@ -40,106 +40,19 @@
 	\end{LARGE}
 \end{titlepage}
 
-\section{Introduction}
-In this study we have deployed the freely available Cityscapes dataset \cite{DBLP:journals/corr/CordtsORREBFRS16} to perform semantic segmentation analysis on urban scene imagery using a variety of Deep Learning architectures. Semantic segmentation is a computer vision technique used to identify and label specific parts of an image at pixel level. The main goal is to partition an image into areas (segments) that correspond to different objects or classes of interest (for example person, car, tree, road, building etc.). This technique is widely used in various fields like for instance, in autonomous driving, where it helps cars understand the  environment around them, as well as in medical imaging, remote sensing, and robotics. Semantic segmentation is typically performed using deep learning methods, particularly convolutional neural networks (CNNs) and their variants as well as more recent attention-based models. 
-\section{Dataset}
-The Cityscapes dataset is a large-scale dataset widely used for training and evaluating algorithms in the fields of computer vision, particularly for semantic understanding of urban street scenes. It features a collection of diverse urban street images from 50 different cities, collected across Germany and some neighbouring countries. The dataset includes over 5,000 fine annotations and 20,000 coarse annotations (see Figure \ref{fig:cityscapes}) of high-resolution images (2048$\times$1024 pixels). The fine annotations are detailed pixel-wise labels for 30 classes such as road, car, pedestrian, building, and traffic light. The detailed annotations are particularly valuable for our task where the goal is to assign a label to each pixel of the image. 
+\input{Introduction}
 
-\begin{figure}[ht]
-    \centering
-    \begin{subfigure}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{coarse_example.jpg}
-        \caption{Coarse mask}
-        \label{fig:sub1}
-    \end{subfigure}\hfill
-    \begin{subfigure}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{fine_example.jpg}
-        \caption{Fine mask}
-        \label{fig:sub2}
-    \end{subfigure}
-    \caption{Examples of coarse (a) and fine (b) mask annotations superimposed on the corresponding original images}
-    \label{fig:cityscapes}
-\end{figure}
+\input{Dataset}
 
-The scenes represent a variety of seasons, daylight conditions, and weather scenarios, providing robust, real-world environments for training models that need to perform under varied conditions. This dataset has been widely used in research for developing and testing algorithms on tasks such as object detection, semantic segmentation, and instance segmentation in urban settings as well as advancing the state-of-the-art in visual perception for autonomous driving systems. The Cityscapes dataset can be accessed in the following address:
-\begin{center}
-\url{https://www.cityscapes-dataset.com}
-\end{center}
-Our particular approach in this study is to create and train at least two models; one with a basic architecture that will form our baseline and a second one where we will be exploring a more complex architecture. We are aiming to demonstrate first of all that both our models are able to perform semantic segmentation on the chosen dataset. Our second goal is to investigate how the choice of various hyper-parameters and tweaks in architecture can affect the accuracy and performance of the models. 
+\input{Architecture}
 
-\section{Architectures}
+\input{Methodology}
 
-Modern, state-of-the-art techniques for image analysis involve convolutional neural networks (CNNs) in their implementation. CNNs can be used to extract vital information from spatial features, which allow us to classify and segment objects in images. A type of neural network architecture designed specifically for semantic segmentation is the Fully Convolutional Network (FCN). This architecture, developed by researchers from UC Berkeley in 2014 \cite{DBLP:journals/corr/LongSD14}, has been influential in advancing the field of computer vision, particularly in tasks requiring dense prediction, like semantic segmentation. 
+\input{Results}
 
-\begin{figure}
-    \centering 
-    \includegraphics[width=0.7\textwidth]{alex-model.pdf}
-    \caption{Example of a fully convolutional network used for semantic segmentation \cite{DBLP:journals/corr/LongSD14}}
-    \label{fig:fcn-arch}
-\end{figure}
+\input{Conclusions}
 
-Unlike standard convolutional neural networks used for image classification, which typically end with fully connected layers, FCNs are composed entirely of convolutional layers. This design allows them to take input of any size and output segmentation maps that correspond spatially to the input image, providing a per-pixel classification. FCNs transform the fully connected layers found in traditional CNNs (like those in AlexNet or VGGNet) into convolutional layers (Figure \ref{fig:fcn-arch}). This is done by treating the fully connected layers as convolutions with kernels that cover the entire input region. For example a fully connected layer that accepts an input of size 16$\times$16 can be reimagined as a convolutional layer with a 16$\times$16 filter size. To generate output segmentation maps that match the size of the input image, FCNs use transposed convolution layers (also known as deconvolutional layers) for upsampling. This process helps in recovering the spatial dimensions that are reduced during the pooling or convolutional operations in earlier layers. FCNs often utilize skip connections to combine deep, semantic information from lower layers with the shallow, appearance information in the upper layers of the network. This helps in improving the accuracy and detail of the output segmentation maps, as it allows the network to use both high-level and low-level features. 
-
-Further improving upon the architecture of the fully convolutional network, the U-net, first introduced in a paper by Olaf Ronneberger, Philipp Fischer and Thomas Brox in 2015 \cite{DBLP:journals/corr/RonnebergerFB15}, has become very popular due to its efficiency and effectiveness, especially where data is limited. U-Net's architecture is distinctive because of its symmetric shape, which resembles the letter ``U'' (see Figure \ref{fig:u-netarch}). 
-\begin{figure}
-    \centering 
-    \includegraphics[width=0.7\textwidth]{u-net-illustration-correct-scale2.pdf}
-    \caption{Example of the original U-net architecture as presented in \cite{DBLP:journals/corr/RonnebergerFB15}}
-    \label{fig:u-netarch}
-\end{figure}
-It consists of two main parts: the left side of the U-net is the contracting path (encoder) which is designed to capture the context of the input image. This path is essentially a typical convolutional network that consists of repeated application of convolutions, followed by rectified linear unit (ReLU) activations, and max pooling for downsampling. Each of these steps helps in capturing the features at different levels of abstraction. On the right side of the network is the expansive path (Decoder), which performs the task of precise localization using transposed convolutions for upsampling. This part of the network gradually recovers the spatial dimensions and detail of the input image. The upsampling in the expansive path is combined with the high-resolution features from the contracting path via skip connections. These connections are crucial as they help in propagating context information to higher resolution layers, which enhances the accuracy of the output segmentation maps. U-Net's design is particularly effective in providing good segmentation results even with small training datasets, which has led to its widespread adoption and adaptation in different segmentation tasks beyond its initial medical imaging focus.
-
-The last architecture we explored in our study was a Vision Transformer (ViT), which is a novel approach to applying transformer models, primarily used in Natural Language Processing (NLP) tasks, to image recognition. In the paper ``An Image is worth 16$\times$16 Words: Transformers for Image Recognition at scale'' \cite{DBLP:journals/corr/abs-2010-11929}, the authors proposed a method that treats an image as a sequence of fixed-size patches (similar to words in NLP). Each patch is embedded similarly to how tokens are embedded in NLP, and then processed by a standard transformer encoder. An overview of this model is depicted in Figure \ref{fig:vit-arch}.
-
-\begin{figure}
-    \centering 
-    \includegraphics[width=0.8\textwidth]{model_scheme.pdf}
-    \caption{Model overview of a Vision Transformer \cite{DBLP:journals/corr/RonnebergerFB15}}
-    \label{fig:vit-arch}
-\end{figure}
-
-Vision transformers can achieve excellent results, outperforming many advanced CNN architectures, particularly when pre-trained on very large datasets. However, the computational complexity especially when applied on high-resolution images increases rapidly, especially for dense prediction tasks like semantic segmentation. For this reason, an improved approach has been suggested called the Swin Transformer model \cite{DBLP:journals/corr/abs-2103-14030}. In contrast to the Vision Transformer that processes the entire image at once by dividing it into fixed-size patches and applying global self-attention to all patches, the Swin transformer divides the image into smaller, non overlapping windows and applies local window-based self-attention (Figure \ref{fig:swintransform}(a)). This reduces the computational complexity because the number of interactions is limited to within a window rather than across the entire image. Additionally, the Swin transformer introduces a novel mechanism of shifting these windows in alternate layers, thus enabling cross-window connections. This helps in integrating local and global contextual information more effectively (Figure \ref{fig:swintransform}(b)). Finally, the fact that the Swin transformer starts with smaller windows and gradually merges them, reducing resolution while increasing the depth of features, enables a hierarchical architecture that processes features at multiple scales. This is beneficial for various vision tasks like object detection and segmentation, where multi-scale features are crucial. These advantages make the Swin transformer suitable as a general purpose backbone for various vision tasks and as will be explained later, we found this model to perform very well in our particular study.
-
-\begin{figure}[ht]
-    \centering
-    \begin{subfigure}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{teaser11.png}
-        \caption{ViT vs Swin transformer}
-        \label{fig:swin-vit}
-    \end{subfigure}\hfill
-    \begin{subfigure}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{teaser_v4.png}
-        \caption{The shifted window technique}
-        \label{fig:shiftwindow}
-    \end{subfigure}
-    \caption{Characteristics of the Swin transformer\cite{DBLP:journals/corr/abs-2103-14030}}
-    \label{fig:swintransform}
-\end{figure}
-
-\section{Methodology}
-
-Our code is made up of the following parts: \\
-The \textbf{work.py} file sets up the training pipeline for our segmentation task. After loading all the necessary libraries, we use the function \textbf{parse\_args()} to define and parse command-line arguments. Using this function  we specify the model to be used in our experiment, as well as the model-specific parameters like learning rate, weight decay, batch size, number of epochs, optimiser etc. The function can also check for which device to use (cuda, mps or cpu) depending on the platform that we run our code on and handles default and edge cases (like when no image size or batch size is specified). The function very usefully also offers a help option that will list and describe all the available options to the user. 
-
-The \textbf{main()} function orchestrates the execution flow. We initialize random seed for reproducibility, set up logging, and merge the default configuration with the command-line arguments using the parsed results. We initialise \textbf{wandb} for tracking our experiment and prepare the datasets and dataloaders for training and validation. We instantiate the model and move it to the designated device (CPU or GPU) and finally create a \textbf{Trainer} object with the model, dataloaders, and configuration and start the training process by instantiating the \textbf{Trainer()} class and calling the \textbf{train} method. 
-
-The \textbf{Trainer.py} performs several functions. It handles the logging of the best model's weights to wandb as 'Artifacts' for tracking and versioning. It performs a single training step by computing the model's output, calculating the loss using the defined loss criterion and updates the model weights based on the gradients. It also conducts an evaluation step, this time without gradient calculation, and updates the evaluation loss metric \textbf{'eval\_losses'}. The training process is iterated over the number of epochs, during which we execute the training and validation steps, log the performance and check for improvement in validation loss in order to save the best model state. Finally we log the training and validation losses to wandb for monitoring. 
-
-The \textbf{model.py} file enables us to dynamically instantiate different models that are used for our analysis by mapping the model names stored on the \textbf{'models'} dictionary to the corresponding architectures. In the \textbf{CityScapesDataset.py} file we define the \textbf{CityScapesDataset()} class which handles the data loading for the CityScapes dataset. The \textbf{get\_transforms()} function allows us to apply transformations to the images and masks loaded from the dataset. Due to limited computational resources, during most of our experiments, we first reduce the size of the images and masks (usually to 512$\times$512px). For training data, additional random transformations (horizontal flipping and rotation) are applied for data augmentation to improve the robustness of the model. Images are then converted to a tensor with normalised pixel values between [0,1] and masks are converted to a long tensor from a numpy array, which is necessary for the categorical targets in our task. 
-
-The models directory contains the definitions of architectures of the various models we have tried for this analysis. We have started our investigation using a straightforward Fully Convolutional Network (FCN) model in \textbf{SimpleFCN.py}. The FCN is structured with an encoder-decoder design pattern. The encoder consists of three stages, each composed of a convolutional layer followed by a ReLU activation function and a max-pooling layer. This sequence allows us to process the image to extract basic features and reduces its spatial dimensions. In the decoder, we reverse the process of the encoder, using transposed convolutions to progressively reconstruct the spatial dimensions of the output. The final layer of the decoder increases the spatial dimensions back to the size of the original image and adjusts the depth to the number of output classes. 
-
-The second model we have deployed is the U-net model as defined in \textbf{UNetModel.py}. Our U-net model consists of the following components: the \textbf{Block()} class defines a basic convolutional module that is made up of a convolutional layer followed by batch normalisation and a ReLU activation function. The \textbf{Downsampler} module is used to process and downsample the input tensor and is part of our encoder. It consists of two convolutional Block modules followed by a max pooling operation to reduce the spatial dimensions by half. The downsampling step increases the receptive field and allows the network to capture more abstract features at each level. The \textbf{Upsampler} module on the other hand is used as part of the decoder and is responsible for upsampling the feature maps and concatenating them from the corresponding downsampler through skip connections. It uses a transposed convolution to increase the spatial resolution and then processes the concatenated output through two Block modules. Finally, we construct our model by stacking together four Downsampler modules which progressively reduce the spatial dimensions and increase the depth of feature maps (64, 128,256,512 channels). Two Block modules process the deepest features without changing their dimensions. This is the "Bottleneck' part of the network and it bridges the encoding and decoding paths. The decoder is made up of four Upsampler modules which progressively increase the spatial dimensions and reduce the depth of the feature maps. Each Upsampler uses the output from the corresponding Downsampler for concatenation (skip connection), which helps in reconstructing the segmentation maps with detailed features. A final convolutional layer with kernel size 1$\times$1 is used to map the 64 channels back to our number of output channels (classes), therefore providing our segmentation output. 
-
-\section{Results}
-
-\section{Conclusions}
-
-\section{Reflections}
+\input{Reflections}
 
 \bibliography{convolutional_assessment}
 
