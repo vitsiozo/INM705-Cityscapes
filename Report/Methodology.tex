@@ -1,3 +1,5 @@
+\newcommand{\lt}{L\textsubscript{2}}
+
 \section{Training Methodology}
 
 \subsection{Transforming and Enhancing Data}
@@ -30,22 +32,86 @@ Using \textbf{Categorical Cross-Entropy} provided better results in the relevant
 This surprising result, which can be seen in \cref{iou_vs_cce}, is likely due to the difference in depth of the loss functions.
 Since it contradicts some existing literature\cite{dice_loss}, it warrants more exploration later.
 
-
-\subsection{Optimiser and other Hyperparameters}
-
-There are many possible hyperparameters to enhance the model.
-
-
 \begin{figure}
 	\centering
-	\includegraphics[width=\textwidth]{cce_vs_iou_loss.png}
-	\caption{IoU score for UNet models trained to minimise both categorical cross-entropy and a related IoU loss. Surprisingly, the one that optimises CCE has better results.}
+	\includegraphics[width=.90\textwidth]{cce_vs_iou_loss.png}
+	\caption{IoU score for UNet models trained to minimise both categorical cross-entropy and a related IoU loss depending on the epoch. Surprisingly, the one that optimises CCE has better results.}
 	\label{iou_vs_cce}
 \end{figure}
 
-\begin{description}[style=nextline]
-	\item[Loss Function]
-	\item[Optimiser]
-		Which optimiser to use to manage the gradient 
-\end{description}
+\subsection{Optimiser and Scheduler}
 
+All mature models use the \textbf{AdamW} optimiser, which decouples weight decay from the optimisation process\cite{adamW}.
+This model produced a more effective \lt{} regularisation than other similar classifiers, and generally better results than both the Adam and Adamax optimiser.
+
+Initial experiments produced a clear overfit in most complex after about 10 steps, which became noticeable after 20.
+To prevent this overfitting, among many other solutions, we implemented a \textbf{Step Scheduler} which lowers the learning rate every 10 steps by a certain factor, $\gamma$.
+This can be seen in \cref{gamma_vs_nogamma}.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=.90\textwidth]{gamma_vs_nogamma.png}
+	\caption{Differences between training and validation loss of a classifier that dynamically adjusts its learning rate every 10 steps and one that doesn't. While both classifiers overfit, the dynamic learning rate makes this process slower and the eventual validation loss reaches better values.}
+	\label{gamma_vs_nogamma}
+\end{figure}
+
+The ideal value of $\gamma$ depends on other hyperparameters, and was thus found in a hyperparameter sweep in \cref{hyperparameter_sweep}.
+
+\subsection{Early Stopping}
+
+Our input data is large and, even with many different kinds of regularisation, all models overfit after so many epochs.
+
+To prevent this we only capture the classifier trained up to the epoch with the lowest validation loss.
+This returns a model that's trained on subtle details that could help identify each pixel as a different class, but ignores noise on the training data that leads it to overfit.
+
+\subsection{Halving Hyperparameter Sweep}
+Some hyperparameters, such as the AdamW optimiser, were set early on as they produced consistently good results.
+
+Others can change the loss function in unpredictable ways.
+In order to test all of them, for the two enhanced models we run a hyperparameter sweep with the parameters in \cref{hyperparameter_list}.
+
+\begin{table}[h]
+	\centering
+	\small
+	\begin{tabular}{>{\bfseries}r | r r r}
+		\toprule
+		Hyperparameter & \multicolumn{3}{c}{Options} \\
+		\midrule
+		Initial Learning Rate & $10^{-3}$ & $10^{-4}$ & \\
+		Learning Rate Decay $\gamma$ & 1 & $\sqrt{0.1}$ & $0.1$ \\
+		\lt{} Weight Decay & $0$ & $10^{-4}$ & \\
+		Dropout & 0 & $0.05$ & $0.1$ \\
+		\bottomrule
+	\end{tabular}
+	\caption{Parameter list for hyperparameter sweep}
+	\label{hyperparameter_list}
+\end{table}
+
+The entire dataset of 2994 images is very large, and making this 36-parameter sweep cost-prohibitive.
+
+To run a parameter sweep, we do a \textbf{Halving Parameter Sweep}\cite{halving_param_sweep}.
+\begin{enumerate}
+	\item Train classifiers for 20 epochs using a randomly sampled subset of the data for each combination of hyperparameters.
+	\item Split the results in two. Discard the half with the highest validation loss, and keep the half with the lower loss.
+	\item Double the amount of data used for the training, and repeat.
+\end{enumerate}
+
+This method makes it possible to discard the least promising results early on, while focusing most time and computing power on the most promising candidates.
+The top 2 candidates are trained using the whole dataset.
+
+The results can be found in \cref{unet_param_sweep,swin2_param_sweep}, with the best parameters in \cref{param_sweep_results}.
+
+\begin{table}[h]
+	\centering
+	\small
+	\begin{tabular}{>{\bfseries}r | r r r r | r}
+		\toprule
+		Model & LR & $\gamma$ & \lt{} & Dropout & Val Loss \\
+		\midrule
+		UNet & & & & & \\
+		Swin2-J & & & & & \\
+		\bottomrule
+	\end{tabular}
+	\caption{Best parameters for parameter sweep}
+	\label{param_sweep_results}
+\end{table}
