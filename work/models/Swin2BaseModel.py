@@ -71,6 +71,9 @@ class Backbone(nn.Module):
 class Swin2BaseModel(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, dropout: float = .1):
         super().__init__()
+        # The backbone can only work with a 768 × 768 image.
+        self.resizedown = Resize((768, 768))
+
         self.backbone = Backbone()
 
         self.bottleneck = Block(1024, 1024, dropout)
@@ -85,7 +88,13 @@ class Swin2BaseModel(nn.Module):
         self.final2 = Upsampler2(64, 32, dropout)
         self.final3 = nn.Conv2d(32, out_channels, kernel_size = 1)
 
+        # We want to resize the result to the same size as the original image.
+        # Since we don't know which one this is, we resize dynamically.
+
     def forward(self, x: Tensor) -> Tensor:
+        size = x.shape[2:]
+        x = self.resizedown(x)
+
         fm1, fm2, fm3, fm4 = self.backbone(x)
         x = fm4
 
@@ -99,4 +108,6 @@ class Swin2BaseModel(nn.Module):
         x = self.final1(x)
         x = self.final2(x)
         x = self.final3(x)
+
+        x = torchvision.transforms.functional.resize(x, size = size)
         return x
