@@ -23,4 +23,4 @@ export https_proxy=http://hpc-proxy00.city.ac.uk:3128
 export TORCH_HOME=/mnt/data/public/torch
 export CUDA_LAUNCH_BLOCKING=1
 
-python halving_parameter_sweep.py "$@"
+python halving_param_sweep.py "$@"
