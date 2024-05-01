@@ -31,14 +31,18 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
             epilog = 'At each step, sweeps the parameters and keeps the best half, it then doubles `n`.',
     )
 
-    parser.add_argument('--model', default = 'Baseline', choices = Model.keys(), dest = 'model_name', help = 'Which model to use.')
-    parser.add_argument('--sweep-dropout', action = 'store_true', help = 'Whether to parameter sweep the dropout value.')
+    model_options = parser.add_argument_group('Model options', 'Options that affect the model and its training')
+    model_options.add_argument('--model', default = 'Baseline', choices = Model.keys(), dest = 'model_name', help = 'Which model to use.')
+    model_options.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
+    model_options.add_argument('--sweep-dropout', action = 'store_true', help = 'Whether to parameter sweep the dropout value.')
 
-    parser.add_argument('--batch-size', type = int, nargs = '?', help = 'Batch size')
-    parser.add_argument('--granularity', type = str, default = 'coarse', choices = ['fine', 'coarse'], help = 'Granularity of the dataset.')
-    parser.add_argument('--optimiser', type = str, default = 'AdamW', choices = ['Adam', 'AdamW', 'Adamax'], dest = 'optimiser_name', help = 'Optimiser.')
-    parser.add_argument('--image-size', type = int, default = 768, help = 'The square image size to use')
-    parser.add_argument('--device', type = str, default = 'cuda', choices = ['cuda', 'mps', 'cpu'], help = 'Which device to use')
+    input_options = parser.add_argument_group('Input image options', 'Options that affect how the training images are read')
+    input_options.add_argument('--image-size', type = int, default = 768, help = 'The square image size to use')
+    input_options.add_argument('--granularity', type = str, default = 'coarse', choices = ['fine', 'coarse'], help = 'Granularity of the dataset.')
+
+    training_options = parser.add_argument_group('Training options', 'Options that affect how the model is trained')
+    training_options.add_argument('--batch-size', type = int, nargs = '?', help = 'Batch size')
+    training_options.add_argument('--device', type = str, default = 'cuda', choices = ['cuda', 'mps', 'cpu'], help = 'Which device to use')
 
     args = parser.parse_args()
 
@@ -77,7 +81,7 @@ def run_sweep(train_dataloader, val_dataloader, config):
     while len(params) > 1:
         config['batches_per_epoch'] = max(1, (config['n'] or 2994) // config['batch_size'] // len(params))
 
-        logging.info(f"New sweep halving! {len(params)} left; n = {config['batches_per_epoch']}")
+        logging.info(f"New sweep halving! {len(params)} left; n = {config['batches_per_epoch'] * config['batch_size']}")
         if len(params) <= 16:
             logging.info(params)
 

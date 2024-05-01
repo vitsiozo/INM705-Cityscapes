@@ -15,7 +15,10 @@ from models.SimpleFCN import *
 
 class Model:
     models = {
-        'Baseline': BaselineModel,
+        'Baseline': SimpleFCN,
+        'EnhancedUNet': UNetNoBatchNormModel,
+        'EnhancedSwin': Swin2BaseModel,
+
         'BaselineNoBatchNorm': BaselineNoBatchNormModel,
         'UNet': UNetModel,
         'UNetNoBatchNorm': UNetNoBatchNormModel,
