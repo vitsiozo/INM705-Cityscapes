@@ -62,10 +62,10 @@ class Backbone(nn.Module):
         fmaps = self.backbone(x)
         fmap1, fmap2, fmap3, fmap4 = [x.permute(0, 3, 1, 2) for x in fmaps]
 
-        # fmap1: b × 96 × 192 × 192
-        # fmap2: b × 192 × 96 × 96
-        # fmap3: b × 384 × 48 × 48
-        # fmap4: b × 768 × 24 × 24
+        # fmap1: b × 128 × 192 × 192
+        # fmap2: b × 256 × 96 × 96
+        # fmap3: b × 512 × 48 × 48
+        # fmap4: b × 1024 × 24 × 24
         return fmap1, fmap2, fmap3, fmap4
 
 class Swin2BaseModel(nn.Module):

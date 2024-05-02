@@ -1,0 +1,200 @@
+\documentclass[border=8pt, multi, tikz]{standalone} 
+\usepackage{import}
+\subimport{PlotNeuralNet/layers/}{init}
+\usetikzlibrary{positioning}
+\usetikzlibrary{3d}
+
+\def\ConvColor{rgb:yellow,5;red,2.5;white,5}
+\def\ConvReluColor{rgb:yellow,5;red,5;white,5}
+\def\PoolColor{rgb:red,1;black,0.3}
+\def\UnpoolColor{rgb:blue,2;green,1;black,0.3}
+\def\FcColor{rgb:blue,5;red,2.5;white,5}
+\def\FcReluColor{rgb:blue,5;red,5;white,4}
+\def\SoftmaxColor{rgb:magenta,5;black,7}   
+\def\SumColor{rgb:blue,5;green,15}
+
+\newcommand{\copymidarrow}{\tikz \draw[-Stealth,line width=0.8mm,draw={rgb:blue,4;red,1;green,1;black,3}] (-0.3,0) -- ++(0.3,0);}
+
+\begin{document}
+\begin{tikzpicture}
+\tikzstyle{connection}=[ultra thick,every node/.style={sloped,allow upside down},draw=\edgecolor,opacity=0.7]
+\tikzstyle{copyconnection}=[ultra thick,every node/.style={sloped,allow upside down},draw={rgb:blue,4;red,1;green,1;black,3},opacity=0.7]
+
+\node[canvas is zy plane at x=0] (input) at (-2, 0, 0) {\includegraphics[width=8cm,height=8cm]{bremen_input.png}};
+
+\pic[shift={(0, 0, 0)}] at (0, 0, 0) 
+    {Box={
+        name=ccr_Down 1,
+        caption= ,
+        xlabel={{64, }},
+        zlabel=768,
+        fill=\ConvColor,
+        height=40,
+        width={ 1 },
+        depth=40
+        }
+    };
+
+
+\pic[shift={ (0,0,0) }] at (ccr_Down 1-east) 
+    {Box={
+        name=relu_Down 1,
+        caption=Down 1,
+        fill=\SoftmaxColor,
+        opacity=0.5,
+        height=40,
+        width=0.2,
+        depth=40
+        }
+    };
+
+
+\pic[shift={ (0,0,0) }] at (relu_Down 1-east) 
+    {Box={
+        name=pool_Down 1,
+        caption= ,
+        fill=\PoolColor,
+        opacity=0.5,
+        height=20,
+        width=2,
+        depth=20
+        }
+    };
+
+\pic[shift={(2, 0, 0)}] at (pool_Down 1-east) 
+    {Box={
+        name=ccr_Down 2,
+        caption= ,
+        xlabel={{128, }},
+        zlabel=384,
+        fill=\ConvColor,
+        height=20,
+        width={ 2 },
+        depth=20
+        }
+    };
+
+
+\pic[shift={ (0,0,0) }] at (ccr_Down 2-east) 
+    {Box={
+        name=relu_Down 2,
+        caption=Down 2,
+        fill=\SoftmaxColor,
+        opacity=0.5,
+        height=20,
+        width=0.2,
+        depth=20
+        }
+    };
+
+
+\pic[shift={ (0,0,0) }] at (relu_Down 2-east) 
+    {Box={
+        name=pool_Down 2,
+        caption= ,
+        fill=\PoolColor,
+        opacity=0.5,
+        height=10,
+        width=4,
+        depth=10
+        }
+    };
+
+\pic[shift={(2, 0, 0)}] at (pool_Down 2-east) 
+    {Box={
+        name=ccr_Down 3,
+        caption= ,
+        xlabel={{256, }},
+        zlabel=192,
+        fill=\ConvColor,
+        height=10,
+        width={ 4 },
+        depth=10
+        }
+    };
+
+
+\pic[shift={ (0,0,0) }] at (ccr_Down 3-east) 
+    {Box={
+        name=relu_Down 3,
+        caption=Down 3,
+        fill=\SoftmaxColor,
+        opacity=0.5,
+        height=10,
+        width=0.2,
+        depth=10
+        }
+    };
+
+
+\pic[shift={ (0,0,0) }] at (relu_Down 3-east) 
+    {Box={
+        name=pool_Down 3,
+        caption= ,
+        fill=\PoolColor,
+        opacity=0.5,
+        height=5,
+        width=8,
+        depth=5
+        }
+    };
+
+\pic[shift={(2,0,0)}] at (pool_Down 3-east) 
+    {Box={
+        name=Up 1,
+        caption=Up 1,
+        xlabel={{" ","dummy"}},
+        ylabel=128,
+        zlabel=192,
+        fill=\SoftmaxColor,
+        opacity=0.8,
+        height=10,
+        width=4,
+        depth=10
+        }
+    };
+
+\pic[shift={(2,0,0)}] at (Up 1-east) 
+    {Box={
+        name=Up 2,
+        caption=Up 2,
+        xlabel={{" ","dummy"}},
+        ylabel=64,
+        zlabel=384,
+        fill=\SoftmaxColor,
+        opacity=0.8,
+        height=20,
+        width=2,
+        depth=20
+        }
+    };
+
+\pic[shift={(2,0,0)}] at (Up 2-east) 
+    {Box={
+        name=Up 3,
+        caption=Up 3,
+        xlabel={{" ","dummy"}},
+        ylabel=34,
+        zlabel=768,
+        fill=\SoftmaxColor,
+        opacity=0.8,
+        height=40,
+        width=1,
+        depth=40
+        }
+    };
+
+\draw [connection]  (pool_Down 1-east)    -- node {\midarrow} (ccr_Down 2-west);
+
+\draw [connection]  (pool_Down 2-east)    -- node {\midarrow} (ccr_Down 3-west);
+
+\draw [connection]  (pool_Down 3-east)    -- node {\midarrow} (Up 1-west);
+
+\draw [connection]  (Up 1-east)    -- node {\midarrow} (Up 2-west);
+
+\draw [connection]  (Up 2-east)    -- node {\midarrow} (Up 3-west);
+
+\node[canvas is zy plane at x=0] (output) at (Up 3-east) {\includegraphics[width=8cm,height=8cm]{bremen_output.png}};
+
+\end{tikzpicture}
+\end{document}

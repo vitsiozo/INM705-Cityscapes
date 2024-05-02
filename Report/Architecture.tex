@@ -1,56 +1,78 @@
 \section{Model Architectures}
-\subsection{Baseline model: Fully Convolutional Network}
+\subsection{Baseline model: Fully Convolutional Network \phantom{xx}\small\texttt{models/SimpleFCN.py}}
 
 Modern, state-of-the-art techniques for image analysis involve convolutional neural networks (CNNs) in their implementation. CNNs can be used to extract vital information from spatial features, which allow us to classify and segment objects in images. A type of neural network architecture designed specifically for semantic segmentation is the Fully Convolutional Network (FCN). This architecture, developed by researchers from UC Berkeley in 2014 \cite{DBLP:journals/corr/LongSD14}, has been influential in advancing the field of computer vision, particularly in tasks requiring dense prediction, like semantic segmentation. 
 
 \begin{figure}
     \centering 
-    \includegraphics[width=0.7\textwidth]{SimpleFCN.png}
+    \includegraphics[width=0.6\textwidth]{SimpleFCN.png}
     \caption{The architecture of the baseline model}
-    \label{fig:fcn-arch}
+    \label{baseline_model}
 \end{figure}
 
-Unlike standard convolutional neural networks used for image classification, which typically end with fully connected layers, FCNs are composed entirely of convolutional layers. This design allows them to take input of any size and output segmentation maps that correspond spatially to the input image, providing a per-pixel classification. FCNs transform the fully connected layers found in traditional CNNs (like those in AlexNet or VGGNet) into convolutional layers (Figure \ref{fig:fcn-arch}). This is done by treating the fully connected layers as convolutions with kernels that cover the entire input region. For example a fully connected layer that accepts an input of size 16$\times$16 can be reimagined as a convolutional layer with a 16$\times$16 filter size. To generate output segmentation maps that match the size of the input image, FCNs use transposed convolution layers (also known as deconvolutional layers) for upsampling. This process helps in recovering the spatial dimensions that are reduced during the pooling or convolutional operations in earlier layers. FCNs often utilize skip connections to combine deep, semantic information from lower layers with the shallow, appearance information in the upper layers of the network. This helps in improving the accuracy and detail of the output segmentation maps, as it allows the network to use both high-level and low-level features. 
+Our baseline model, illustrated in \cref{baseline_model}, is a simple fully-convolutional network with 3 encoding and 3 decoding steps.
 
-\subsection{U-net}
+\begin{description}
+	\item[Each encoding step] \phantom{hello}
+		\begin{enumerate}
+			\item Conv2D layer with kernel size $3 \times 3$ and simple padding to double of channels.
+			\item ReLU layer to add some non-linearity.
+			\item Max-pooling layer with kernel size $2 \times 2$ to ensure the following encoding layer gathers less local data.
+		\end{enumerate}
+	\item[Each decoder step] \phantom{hello}
+		\begin{enumerate}
+			\item Transposed convolution with kernel size $2 \times 2$, which halves the amount of channels and doubles the size of the image.
+		\end{enumerate}
+\end{description}
 
-Further improving upon the architecture of the fully convolutional network, the U-net, first introduced in a paper by Olaf Ronneberger, Philipp Fischer and Thomas Brox in 2015 \cite{DBLP:journals/corr/RonnebergerFB15}, has become very popular due to its efficiency and effectiveness, especially where data is limited. U-Net's architecture is distinctive because of its symmetric shape, which resembles the letter ``U'' (see Figure \ref{fig:u-netarch}). 
-\begin{figure}
+This model produces a result that's \textit{good enough}, but it can be improved by adding a bit of complexity.
+
+Following are two enhanced models, both with a significantly better result.
+
+\subsection{Enhanced Model 1: UNet \phantom{MMMMMMMMMMMMx}\small\texttt{models/UNet.py}}
+
+The first enhanced model for our image segmentation task is a UNet model\cite{unet}.
+
+This produces an encoder-decoder architecture that's not too dissimilar to our baseline model, but it has the addition of skip connections so that the transposed convolutions get data with different resolution as seen in \cref{unet}.
+
+\begin{figure}[h]
     \centering 
-    \includegraphics[width=0.7\textwidth]{u-net-illustration-correct-scale2.pdf}
-    \caption{Example of the original U-net architecture as presented in \cite{DBLP:journals/corr/RonnebergerFB15}}
-    \label{fig:u-netarch}
+    \includegraphics[width=0.65\textwidth]{u-net-illustration-correct-scale2.pdf}
+    \caption{UNet architecture}
+    \label{unet}
 \end{figure}
-It consists of two main parts: the left side of the U-net is the contracting path (encoder) which is designed to capture the context of the input image. This path is essentially a typical convolutional network that consists of repeated application of convolutions, followed by rectified linear unit (ReLU) activations, and max pooling for downsampling. Each of these steps helps in capturing the features at different levels of abstraction. On the right side of the network is the expansive path (Decoder), which performs the task of precise localization using transposed convolutions for upsampling. This part of the network gradually recovers the spatial dimensions and detail of the input image. The upsampling in the expansive path is combined with the high-resolution features from the contracting path via skip connections. These connections are crucial as they help in propagating context information to higher resolution layers, which enhances the accuracy of the output segmentation maps. U-Net's design is particularly effective in providing good segmentation results even with small training datasets, which has led to its widespread adoption and adaptation in different segmentation tasks beyond its initial medical imaging focus.
 
-\subsection{Vision and Swin Transformers}
+In practice, these skip connections give the model a significant improvement in image segmentation, where precise localisation is critical and getting both high-resolution and low-resolution images in each layer can help it identify each part better.
 
-The last architecture we explored in our study was a Vision Transformer (ViT), which is a novel approach to applying transformer models, primarily used in Natural Language Processing (NLP) tasks, to image recognition. In the paper ``An Image is worth 16$\times$16 Words: Transformers for Image Recognition at scale'' \cite{DBLP:journals/corr/abs-2010-11929}, the authors proposed a method that treats an image as a sequence of fixed-size patches (similar to words in NLP). Each patch is embedded similarly to how tokens are embedded in NLP, and then processed by a standard transformer encoder. An overview of this model is depicted in Figure \ref{fig:vit-arch}.
+The best hyperparameters for this model and the following one were found in a parameter sweep in \cref{param_sweep}.
+
+\subsection{Enhanced Model 2: Swin transformer + JNet \phantom{xx}\small\texttt{models/Swin2Base.py}}
 
 \begin{figure}
-    \centering 
-    \includegraphics[width=0.8\textwidth]{model_scheme.pdf}
-    \caption{Model overview of a Vision Transformer \cite{DBLP:journals/corr/RonnebergerFB15}}
-    \label{fig:vit-arch}
+	\centering
+	\fbox{\includegraphics[height=.4\textheight]{Swin2_JNet}}
+	\caption{Rough outline of Swin2-JNet architecture in use for the Enhanced Model 2. The encoder is a Swin2 tranformer with pre-trained weights; the decoder is a series of upscaling convolutions}
+	\label{swin2}
 \end{figure}
 
-Vision transformers can achieve excellent results, outperforming many advanced CNN architectures, particularly when pre-trained on very large datasets. However, the computational complexity especially when applied on high-resolution images increases rapidly, especially for dense prediction tasks like semantic segmentation. For this reason, an improved approach has been suggested called the Swin Transformer model \cite{DBLP:journals/corr/abs-2103-14030}. In contrast to the Vision Transformer that processes the entire image at once by dividing it into fixed-size patches and applying global self-attention to all patches, the Swin transformer divides the image into smaller, non overlapping windows and applies local window-based self-attention (Figure \ref{fig:swintransform}(a)). This reduces the computational complexity because the number of interactions is limited to within a window rather than across the entire image. Additionally, the Swin transformer introduces a novel mechanism of shifting these windows in alternate layers, thus enabling cross-window connections. This helps in integrating local and global contextual information more effectively (Figure \ref{fig:swintransform}(b)). Finally, the fact that the Swin transformer starts with smaller windows and gradually merges them, reducing resolution while increasing the depth of features, enables a hierarchical architecture that processes features at multiple scales. This is beneficial for various vision tasks like object detection and segmentation, where multi-scale features are crucial. These advantages make the Swin transformer suitable as a general purpose backbone for various vision tasks and as will be explained later, we found this model to perform very well in our particular study.
+Vision Transformers were introduced by the Google Brain team in 2020\cite{vision_transformers}.
+To train this model an image is split into $16 \times 16$ patches, each of which is flattened and sent to an attention head.
+Each attention head makes its own image segmentation prediction, and all the predictions are finally patched together.
 
-\begin{figure}[ht]
-    \centering
-    \begin{subfigure}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{teaser11.png}
-        \caption{ViT vs Swin transformer}
-        \label{fig:swin-vit}
-    \end{subfigure}\hfill
-    \begin{subfigure}{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{teaser_v4.png}
-        \caption{The shifted window technique}
-        \label{fig:shiftwindow}
-    \end{subfigure}
-    \caption{Characteristics of the Swin transformer\cite{DBLP:journals/corr/abs-2103-14030}}
-    \label{fig:swintransform}
-\end{figure}
+Vision transformers have had good results in many image analysis tasks\cite{vision_transformers_a_survey}.
+However, many tests in our codebase of Cityscapes didn't produce results on models using them, so an alternative was needed.
+
+Instead, we use the attention mechanisms in the Swin2 transformers\cite{swin2} to encode the relevant features of the image.
+Swin2 uses a more refined architecture mechanism that ViT, such as shifted windows to ensure that the attention heads from one of the patches can be used in the next.
+
+Like most transformers architectures, Swin2 requires a lot of data and time to be trained into something relevant.
+Instead of doing this, we leverage transfer learning by using pre-trained weights in the encoder.
+
+The base model of Swin2 encodes the data in 4 attention heads, each one with a smaller image containing more channels of data.
+We can leverage this data by getting each of the 4 output feature maps at each step of the way, and adding them as skip connections to up-convolutions in a similar way to UNet.
+
+Additionally, we noticed that this model tends to overfit quicker than other UNet model.
+To prevent this, we added a both a \emph{Dropout} and a \emph{Batch Normalisation} layer to each convolutional block; these normalisations tend to improve the performance of the model.
+
+The ideal ratio of dropout was found in a parameter sweep, along with most other parameters, in \cref{param_sweep}.
 
