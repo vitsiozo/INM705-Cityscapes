@@ -31,6 +31,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
 
     model_options = parser.add_argument_group('Model options', 'Options that affect the model and its training')
     model_options.add_argument('--model', default = 'Baseline', choices = Model.keys(), dest = 'model_name', help = 'Which model to use. "Baseline", "EnhancedUNet", and "EnhancedSwin" expand to the corresponding models.')
+    model_options.add_argument('--pretrained-model-weights', help = 'Wandb ID to pre-load model weights')
 
     model_options.add_argument('--lr', type = float, default = 1e-3, help = 'Initial learning rate.')
     model_options.add_argument('--weight-decay', type = float, default = 0., help = 'L2 weight decay.')
@@ -128,6 +129,13 @@ def main():
     val_dataloader = DataLoader(val_dataset, batch_size = config['batch_size'], shuffle = True)
 
     model = config['model'].to(config['device'])
+    if config['pretrained_model_weights'] is not None:
+        logging.info(f'Using pretrained weights from {config["pretrained_model_weights"]}')
+        artifact = wandb.use_artifact(config['pretrained_model_weights'], type = 'model')
+        artifact_dir = artifact.download()
+        weights_file = os.path.join(artifact_dir, 'model.pth')
+        weights = torch.load(weights_file, map_location = config['device'])
+        model.load_state_dict(weights)
 
     trainer = Trainer(model, train_dataloader, val_dataloader, config, eval_losses = {'IoU Score': IoUScore(ignore_index = 0), 'iIoU Score': InstanceIoUScore(ignore_index = 0)})
     trainer.train(epochs = config['epochs'])
