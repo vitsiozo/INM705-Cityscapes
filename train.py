@@ -21,7 +21,8 @@ from Model import Model
 
 def parse_args(is_hyperion: bool) -> dict[str, Any]:
     losses = dict(
-        cross_entropy = CrossEntropyLoss(reduction = 'sum', ignore_index = 0),
+        cross_entropy = CrossEntropyLoss(reduction = 'sum'),
+        cross_entropy_ignore = CrossEntropyLoss(reduction = 'sum', ignore_index = 0),
         dice_loss = DiceLoss(),
         iou_loss = IoULoss(),
     )

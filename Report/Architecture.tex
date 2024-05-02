@@ -1,18 +1,18 @@
-\subsection{Architectures}
-\subsubsection*{Fully Convolutional Network}
+\section{Model Architectures}
+\subsection{Baseline model: Fully Convolutional Network}
 
 Modern, state-of-the-art techniques for image analysis involve convolutional neural networks (CNNs) in their implementation. CNNs can be used to extract vital information from spatial features, which allow us to classify and segment objects in images. A type of neural network architecture designed specifically for semantic segmentation is the Fully Convolutional Network (FCN). This architecture, developed by researchers from UC Berkeley in 2014 \cite{DBLP:journals/corr/LongSD14}, has been influential in advancing the field of computer vision, particularly in tasks requiring dense prediction, like semantic segmentation. 
 
 \begin{figure}
     \centering 
-    \includegraphics[width=0.7\textwidth]{alex-model.pdf}
-    \caption{Example of a fully convolutional network used for semantic segmentation \cite{DBLP:journals/corr/LongSD14}}
+    \includegraphics[width=0.7\textwidth]{SimpleFCN.png}
+    \caption{The architecture of the baseline model}
     \label{fig:fcn-arch}
 \end{figure}
 
 Unlike standard convolutional neural networks used for image classification, which typically end with fully connected layers, FCNs are composed entirely of convolutional layers. This design allows them to take input of any size and output segmentation maps that correspond spatially to the input image, providing a per-pixel classification. FCNs transform the fully connected layers found in traditional CNNs (like those in AlexNet or VGGNet) into convolutional layers (Figure \ref{fig:fcn-arch}). This is done by treating the fully connected layers as convolutions with kernels that cover the entire input region. For example a fully connected layer that accepts an input of size 16$\times$16 can be reimagined as a convolutional layer with a 16$\times$16 filter size. To generate output segmentation maps that match the size of the input image, FCNs use transposed convolution layers (also known as deconvolutional layers) for upsampling. This process helps in recovering the spatial dimensions that are reduced during the pooling or convolutional operations in earlier layers. FCNs often utilize skip connections to combine deep, semantic information from lower layers with the shallow, appearance information in the upper layers of the network. This helps in improving the accuracy and detail of the output segmentation maps, as it allows the network to use both high-level and low-level features. 
 
-\subsubsection*{U-net}
+\subsection{U-net}
 
 Further improving upon the architecture of the fully convolutional network, the U-net, first introduced in a paper by Olaf Ronneberger, Philipp Fischer and Thomas Brox in 2015 \cite{DBLP:journals/corr/RonnebergerFB15}, has become very popular due to its efficiency and effectiveness, especially where data is limited. U-Net's architecture is distinctive because of its symmetric shape, which resembles the letter ``U'' (see Figure \ref{fig:u-netarch}). 
 \begin{figure}
@@ -23,7 +23,7 @@ Further improving upon the architecture of the fully convolutional network, the 
 \end{figure}
 It consists of two main parts: the left side of the U-net is the contracting path (encoder) which is designed to capture the context of the input image. This path is essentially a typical convolutional network that consists of repeated application of convolutions, followed by rectified linear unit (ReLU) activations, and max pooling for downsampling. Each of these steps helps in capturing the features at different levels of abstraction. On the right side of the network is the expansive path (Decoder), which performs the task of precise localization using transposed convolutions for upsampling. This part of the network gradually recovers the spatial dimensions and detail of the input image. The upsampling in the expansive path is combined with the high-resolution features from the contracting path via skip connections. These connections are crucial as they help in propagating context information to higher resolution layers, which enhances the accuracy of the output segmentation maps. U-Net's design is particularly effective in providing good segmentation results even with small training datasets, which has led to its widespread adoption and adaptation in different segmentation tasks beyond its initial medical imaging focus.
 
-\subsubsection*{Vision and Swin Transformers}
+\subsection{Vision and Swin Transformers}
 
 The last architecture we explored in our study was a Vision Transformer (ViT), which is a novel approach to applying transformer models, primarily used in Natural Language Processing (NLP) tasks, to image recognition. In the paper ``An Image is worth 16$\times$16 Words: Transformers for Image Recognition at scale'' \cite{DBLP:journals/corr/abs-2010-11929}, the authors proposed a method that treats an image as a sequence of fixed-size patches (similar to words in NLP). Each patch is embedded similarly to how tokens are embedded in NLP, and then processed by a standard transformer encoder. An overview of this model is depicted in Figure \ref{fig:vit-arch}.
 
