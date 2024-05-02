@@ -24,4 +24,3 @@ export TORCH_HOME=/mnt/data/public/torch
 export CUDA_LAUNCH_BLOCKING=1
 
 python work.py "$@" --model Swin2Base --no-resize --batch-size 4 --epochs 40 --lr 0.001 --gamma 1 --weight-decay 0.0001 --dropout 0.05
-python work.py "$@" --model UNetNoBatchNorm --no-resize --batch-size 4 --epochs 40 --lr 0.001 --gamma 0.31622 --weight-decay 0.0001
