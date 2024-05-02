@@ -22,4 +22,4 @@ export https_proxy=http://hpc-proxy00.city.ac.uk:3128
 export TORCH_HOME=/mnt/data/public/torch
 export CUDA_LAUNCH_BLOCKING=1
 
-python work.py "$@" --model UNetNoBatchNorm --no-resize --batch-size 4 --epochs 40 --lr 0.001 --gamma 0.31622
+python train.py "$@" --model UNetNoBatchNorm --no-resize --batch-size 4 --epochs 40 --lr 0.001 --gamma 0.31622
