@@ -42,7 +42,7 @@ class Transformer(nn.Module):
         return x
 
 class UNetTransformerModel(nn.Module):
-    def __init__(self, pretrained = False, in_channels: int, out_channels: int):
+    def __init__(self, in_channels: int, out_channels: int, pretrained = False):
         super().__init__()
 
         self.transformer = Transformer(pretrained)
