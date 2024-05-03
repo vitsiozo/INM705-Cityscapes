@@ -50,8 +50,8 @@ The best hyperparameters for this model and the following one were found in a pa
 
 \begin{figure}
 	\centering
-	\fbox{\includegraphics[height=.4\textheight]{Swin2_JNet}}
-	\caption{Rough outline of Swin2-JNet architecture in use for the Enhanced Model 2. The encoder is a Swin2 tranformer with pre-trained weights; the decoder is a series of upscaling convolutions}
+	\includegraphics[height=.4\textheight]{Swin2_JNet}
+	\caption{Rough outline of Swin2-JNet architecture in use for the Enhanced Model 2. The encoder is a Swin2 tranformer with pre-trained weights; the decoder is a series of upscaling convolutions using the results from the previous step and skip connections from the encoder.}
 	\label{swin2}
 \end{figure}
 

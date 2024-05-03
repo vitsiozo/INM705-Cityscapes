@@ -100,19 +100,43 @@ To run a parameter sweep, we do a \textbf{Halving Parameter Sweep}\cite{halving_
 This method makes it possible to discard the least promising results early on, while focusing most time and computing power on the most promising candidates.
 The top 2 candidates are trained using the whole dataset.
 
-The results can be found in \cref{unet_param_sweep,swin2_param_sweep}, with the best parameters in \cref{param_sweep_results}.
+The results can be found in \cref{param_sweep}, with the best parameters in \cref{param_sweep_results}.
 
 \begin{table}[h]
 	\centering
 	\small
-	\begin{tabular}{>{\bfseries}r | r r r r | r}
+	\begin{tabular}{>{\bfseries}r | c c c c | r}
 		\toprule
 		Model & LR & $\gamma$ & \lt{} & Dropout & Val Loss \\
 		\midrule
-		UNet & & & & & \\
-		Swin2-J & & & & & \\
+		UNet & $10^{-3}$ & $\sqrt{0.1}$ & $0$ & & \num{221343} \\
+		Swin2-J & $10^{-3}$ & 1 & $10^{-4}$ & $0.05$ & \num{78946} \\
 		\bottomrule
 	\end{tabular}
-	\caption{Best parameters for parameter sweep}
+	\caption{Parameters with best validation loss in the last round of the halving hyperparameter sweep.}
 	\label{param_sweep_results}
 \end{table}
+
+\begin{figure}[t]
+	\begin{subfigure}[t]{.35\textwidth}
+		\includegraphics[height=300pt]{unet_sweep.png}
+		\caption{Halving hyperparameter sweep for UNet model.}
+		\label{unet_param_sweep}
+	\end{subfigure} \hfill{}
+	\begin{subfigure}[t]{.65\textwidth}
+		\hfill{}
+		\includegraphics[height=300pt]{swin2_sweep.png}
+		\caption{Halving hyperparameter sweep for Swin2-JNet model.}
+		\label{swin2_param_sweep}
+	\end{subfigure}
+	\caption{Results of the halving hyperparameter sweep for both enhanced models. Transparent points are the ones in the lower half of each sweep, which didn't make it to the next sweep. Validation loss is wildly different since each sweep uses a different subset of training and validation loss: the ordering matters, but the values themselves are meaningless.}
+	\label{param_sweep}
+\end{figure}
+
+In addition to the best hyperparameters for our models, this parameter sweep gives some interesting information about the models.
+\begin{enumerate}
+	\item In both cases, runs with $\text{LR} = 10^{-3}$ beat the ones with $\text{LR} = 10^{-4}$. The second initial learning rate is likely too small.
+	\item In the UNet model, both a variable learning rate and a nonzero \lt{} weight decay are good predictors for validation loss.
+		This is not true in the Swin2-JNet model, where models with positive weight decay and no variable learning rate have a consistently better validation loss than ones with variable learning rate.
+		This second case is likely due to dropout: the winner models have positive dropout (not shown in the scatterplot due to lack of dimensionality), which prevents overfitting better than a variable learning rate.
+\end{enumerate}
