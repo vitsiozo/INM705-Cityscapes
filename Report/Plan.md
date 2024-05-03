@@ -7,8 +7,9 @@
 * setup.py
 
 ## Report
-* Results from parameter sweep.
-* Why we don't use ignore-0 CCE loss.
+* Results from parameter sweep. ✓
+* Why we don't use ignore-0 CCE loss. ✓
+    * Add an image here.
 * A better talk about objectives and stuff
 * The entirety of the results.
 * Change "transformer head" arrow to something more reasonable.
