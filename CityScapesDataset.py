@@ -45,6 +45,7 @@ class CityScapesDataset(Dataset):
 
         self.images = []
         self.masks = []
+
         for city in os.listdir(image_dir):
             city_image_dir = os.path.join(image_dir, city)
             city_mask_dir = os.path.join(mask_dir, city)
