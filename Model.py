@@ -12,6 +12,7 @@ from models.Swin2LargeModel import Swin2LargeModel
 from models.NewBaselineModel import NewBaselineModel
 from models.ResnetBaseline import *
 from models.SimpleFCN import *
+from models.ASPP import *
 
 class Model:
     models = {
@@ -31,6 +32,7 @@ class Model:
         'ResnetBaseline': ResnetBaseline,
         'BetterResnetBaseline': ResnetBaseline,
         'SimpleFCN': SimpleFCN,
+        'ASPP': ASPP,
     }
 
     @classmethod
