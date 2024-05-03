@@ -62,7 +62,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
     )
 
     args.loss_fn = losses[args.loss_fn_name]
-    if args.loss_fn_name == 'cross_entropy':
+    if args.loss_fn_name in ['cross_entropy', 'cross_entropy_ignore']:
         args.accumulate_fn = lambda loss, loader: loss / len(loader.dataset)
     else:
         args.accumulate_fn = lambda loss, loader: loss / len(loader)
@@ -101,7 +101,7 @@ def main():
     torch.manual_seed(random_seed)
 
     logging.basicConfig(
-        level = logging.INFO,
+        level = logging.DEBUG,
         format = '[%(asctime)s] %(message)s',
         datefmt = '%Y-%m-%d %H:%M:%S',
     )
