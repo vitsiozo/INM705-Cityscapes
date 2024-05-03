@@ -60,7 +60,7 @@ class Trainer:
         self.wandb.log_artifact(artifact, aliases = labels)
 
         if self.artifact_to_delete is not None:
-            logging.debug(f'Deleting old artifact with ID {self.artifact_to_delete.id}')
+            logging.info(f'Deleting old artifact with ID {self.artifact_to_delete.id}')
             self.artifact_to_delete.delete()
             self.artifact_to_delete = None
 
@@ -71,7 +71,7 @@ class Trainer:
 
             self.artifact_to_delete = old_artifact
         except wandb.errors.CommError as e:
-            logging.debug(f'First artifact, not deleting ({e})')
+            logging.info(f'First artifact, not deleting ({e})')
 
     def train_step(self, images, masks):
         self.optimizer.zero_grad()
@@ -110,7 +110,7 @@ class Trainer:
                     total_extra_losses[k] += v.detach()
 
             lr = self.optimizer.param_groups[0]['lr']
-            logging.debug(f'Running {e}/{batches}: lr = {lr:g}; partial loss = {loss / len(images):g}')
+            logging.info(f'Running {e}/{batches}: lr = {lr:g}; partial loss = {loss / len(images):g}')
 
             total_loss += loss
 
@@ -152,7 +152,7 @@ class Trainer:
             val_loss, extra = self.run_epoch(self.val_dataloader, training = False)
 
             if val_loss < best_loss:
-                logging.debug('Best loss found!')
+                logging.info('Best loss found!')
                 self.log_model(train_loss = train_loss, val_loss = val_loss, epoch = epoch)
                 best_loss = val_loss
 
@@ -163,8 +163,8 @@ class Trainer:
                 'Best loss': best_loss,
             } | extra
 
-            logging.debug('\n'.join([f'Epoch {epoch}/{epochs}:'] + [f'{k}:\t{v:g}' for k, v in losses.items()]))
+            logging.info('\n'.join([f'Epoch {epoch}/{epochs}:'] + [f'{k}:\t{v:g}' for k, v in losses.items()]))
             self.wandb.log({'Epoch': epoch} | sample | losses)
 
-        logging.debug(f'Model final loss is {best_loss}')
+        logging.info(f'Model final loss is {best_loss}')
         return best_loss

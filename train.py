@@ -101,7 +101,7 @@ def main():
     torch.manual_seed(random_seed)
 
     logging.basicConfig(
-        level = logging.DEBUG,
+        level = logging.INFO,
         format = '[%(asctime)s] %(message)s',
         datefmt = '%Y-%m-%d %H:%M:%S',
     )
