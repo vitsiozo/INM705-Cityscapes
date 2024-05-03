@@ -65,9 +65,49 @@ Training options:
                         Which device to use.
 ```
 
+Example usage:
+```
+python train.py --model EnhancedSwin --gamma 0.123 --lr 0.001 --weight-decay 0.00001 --optimiser Adamax
+```
+
+# How to continue training a pre-trained model.
+The optional `--pretrained-model-weights` arguments in `train.py` can point to a Wandb artifact (NOT a model ID or tag!). This model will be used as a base and will continue training from there.
+
+Note that:
+1. The model needs to be identical to the pre-trained one. Ensure that the command-line arguments are the same.
+2. The epoch number will start from 1 regardless of the amount of epochs in the previous model.
+
 # How to run a parameter sweep
 `halving_param_sweep.py` runs a new halving parameter sweep, which is explained in **Section 2.5** of the report.
 
 The arguments, explained in `python halving_param_sweep.py --help`, are similar to the ones used in `train.py` without most model options (other than a boolean --sweep-dropout to also do a parameter sweep over the dropout).
 
 Which values are swept can be modified inside the `.py` file.
+
+# How to evaluate a model against one image.
+`eval_mask.py` evaluates a model against an image (which can be from CityScapes or anywhere else!) and returns a mask to be used for comparison.
+
+It can also optionally create a second image of comparison with a ground truth.
+
+Example usages:
+```
+python eval_mask.py enhanced_swin2 city_file.png output_mask.png
+python eval_mask.py --gt-output ground_truth.png enhanced_swin2 data/leftImg8bit/val/frankfurt/frankfurt_000000_000294_leftImg8bit.png output_mask.png
+```
+
+The model name (`enhanced_swin2`) can be either a Wandb model name or a Wandb tag; the evaluator takes its config and the latest artifact (which is the one with the best validation score).
+
+`baseline`, `enhanced_unet`, and `enhanced_swin2` expand to the final models from our assessment.
+
+# How to get the score of an already-trained model
+`eval_score.py` evaluates a model in one of the CityScapes (train, val, test) datasets.
+
+Note that the `test` dataset does not contain valid images when downloaded from the CityScapes website, as these images are secret.
+
+As before, the model can be a tag or a model ID.
+`baseline`, `enhanced_unet`, and `enhanced_swin2` expand to the final models from our assessment.
+
+Example usage:
+```
+python eval_score.py enhanced_swin2
+```
