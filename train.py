@@ -31,7 +31,7 @@ def parse_args(is_hyperion: bool) -> dict[str, Any]:
 
     model_options = parser.add_argument_group('Model options', 'Options that affect the model and its training')
     model_options.add_argument('--model', default = 'Baseline', choices = Model.keys(), dest = 'model_name', help = 'Which model to use. "Baseline", "EnhancedUNet", and "EnhancedSwin" expand to the corresponding models.')
-    model_options.add_argument('--pretrained-model-weights', help = 'Wandb ID to pre-load model weights')
+    model_options.add_argument('--pretrained-model-weights', help = 'Wandb Artifact ID to pre-load model weights and continue training from there. Arguments should be identical to its config.')
 
     model_options.add_argument('--lr', type = float, default = 1e-3, help = 'Initial learning rate.')
     model_options.add_argument('--weight-decay', type = float, default = 0., help = 'L2 weight decay.')

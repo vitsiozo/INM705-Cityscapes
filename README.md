@@ -29,8 +29,11 @@ Model options:
   Options that affect the model and its training
 
   --model {Baseline,EnhancedUNet,EnhancedSwin,...}
-                        Which model to use. "Baseline", "EnhancedUNet", and "EnhancedSwin" expand to
-                        the corresponding models.
+                        Which model to use. "Baseline", "EnhancedUNet", and "EnhancedSwin" expand to the corresponding models.
+  --pretrained-model-weights PRETRAINED_MODEL_WEIGHTS
+                        Wandb ID to pre-load model weights
+
+
   --lr LR               Initial learning rate.
   --weight-decay WEIGHT_DECAY
                         L2 weight decay.
