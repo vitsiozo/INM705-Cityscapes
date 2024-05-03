@@ -1,36 +1,29 @@
 import argparse
 import logging
-import random
 import os
-import socket
 import torch
 import wandb
 
 from typing import Any
 
+from torch import tensor
 from torch.nn import CrossEntropyLoss
-from torch.optim import Adam, AdamW, Adamax
 from torch.utils.data import DataLoader
 
 from CityScapesDataset import CityScapesDataset
-from Trainer import Trainer
-from DiceLoss import DiceLoss
-from JaccardLoss import *
-
 from Model import Model
 
-from torch import tensor
 
 def parse_args():
     parser = argparse.ArgumentParser(
             description = 'Downloads a Wandb Artifact and evaluates its score against the validation or test sets.',
-            epilog = 'Example usage: python eval_score.py --run-on val enhanced_swin2',
+            epilog = 'Example usage: python eval_score.py enhanced_swin2',
     )
 
     parser.add_argument('--batch-size', type = int, default = 16, help = 'Batch size. Lower this if the program runs out of memory.')
     parser.add_argument('--granularity', choices = ['coarse', 'fine'], help = 'Granularity (same as model by default).')
     parser.add_argument('--device', choices = ['cuda', 'mps', 'cpu'], default = 'cuda', help = 'Which device to evaluate on.')
-    parser.add_argument('--run-on', choices = ['train', 'val', 'test'], default = 'test', help = 'Which dataset to test this on (test by default)')
+    parser.add_argument('--run-on', choices = ['train', 'val', 'test'], default = 'val', help = 'Which dataset to test this on (val by default)')
     parser.add_argument('model', help = 'Wandb tags or model name. Use `baseline`, `enhanced_unet`, and `enhanced_swin2` for final models.')
 
     return parser.parse_args()
