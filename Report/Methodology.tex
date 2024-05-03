@@ -3,14 +3,16 @@
 \section{Training Methodology}
 
 \subsection{Transforming and Enhancing Data}
-In our final runs, the images in the input data are resized to $768 \times 768$.
-This size presents a good balance between model performance and training speed: the final results of the models were almost identical to using the entire size of $2048 \times 1024$.
-Additionally, this new size makes it possible to use pretrained Swin2 in the entire data instead of having to separate the images of stretch it separately.
+% In our test runs, the images in the input data are resized to $768 \times 768$.
+% This size presents a good balance between model performance and training speed: the final results of the models were almost identical to using the entire size of $2048 \times 1024$.
+% Additionally, this new size makes it possible to use pretrained Swin2 in the entire data instead of having to separate the images of stretch it separately.
 
-The loss of the final mask is calculated on the small, resized image.
-When evaluating, the final mask is stretched to its original larger size.
+% The loss of the final mask is calculated on the small, resized image.
+% When evaluating, the final mask is stretched to its original larger size.
 
-Additionally, we experimented with creating random transforms of the input data, including random flips and random crops.
+% Additionally, we experimented with creating random transforms of the input data, including random flips and random crops.
+
+We experimented with creating random transforms of the input data, including random flips and random crops.
 
 In different experiments these transforms either replaced or augmented the original training data.
 However, this is not present in the final models as their results weren't conclusive: since the original data is complete enough, adding these transforms only made the results on the validation set worse.
@@ -23,6 +25,7 @@ In this assessment, we experimented with three different loss functions.
 
 \begin{description}[style=nextline]
 	\item[Categorical Cross-Entropy Loss] All pixels (except the ones marked as background) are equally weighted.
+	\item[CCE loss ignoring background pixels] Pixels marked as background in the true mask are not counted for the loss.
 	\item[Intersection over Union Loss] A differentiable version of IoU score, which should ideally work to maximise it.
 	\item[Dice Loss] Categories that appear less often are weighted higher\cite{dice_loss}.
 \end{description}
@@ -31,6 +34,9 @@ Using \textbf{Categorical Cross-Entropy} provided better results in the relevant
 
 This surprising result, which can be seen in \cref{iou_vs_cce}, is likely due to the difference in depth of the loss functions.
 Since it contradicts some existing literature\cite{dice_loss}, it warrants more exploration later.
+
+While ignoring background pixels produces better metrics in IoU loss than regular categorical cross-entropy, in the actual results pixels that should be marked as background tend to have another arbitrary category.
+The objective of this work is to produce a good mask for city scenes, so not ignoring pixels is preferable despite the hit in metrics.
 
 \begin{figure}
 	\centering
