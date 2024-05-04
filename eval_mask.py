@@ -83,7 +83,7 @@ def join_imagemask(image, mask):
     return result_image
 
 def get_image(input_file):
-    image = Image.open(input_file)
+    image = Image.open(input_file).convert('RGB')
     return transforms.functional.to_dtype(transforms.functional.to_image(image), dtype = torch.float32, scale = True)
 
 @torch.no_grad()
