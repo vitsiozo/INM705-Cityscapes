@@ -1,5 +1,5 @@
 # CityScapes!
-Assessment for Deep Learning for Image Analysis from Martin Fixman and Greg Gregoris.
+Assessment for Deep Learning for Image Analysis from Martin Fixman and Grigorios Vaitsas.
 
 # Downloading the dataset.
 To download the dataset, you must accept the terms and conditions and create an account at https://www.cityscapes-dataset.com. Unfortunately, this makes it impossible to bundle the data in this.
@@ -11,7 +11,7 @@ The dataset consists of two packages, which can be downloaded after signing up i
 These files should be downloaded to the `data/leftImg8bit` and `data/coarse` directories, respectively. These are later read by `CityScapesDataset.py` when running a model.
 
 # Wandb considerations.
-If you are logged to a wandb account, all models and their interesting data can be logged its account.
+If you are logged to a wandb account, all models and their interesting data can be logged in this account.
 
 In Hyperion, you might want to modify the `WANDB_API_KEY` inside the `sh` file.
 
@@ -82,7 +82,7 @@ Note that:
 
 The arguments, explained in `python halving_param_sweep.py --help`, are similar to the ones used in `train.py` without most model options (other than a boolean --sweep-dropout to also do a parameter sweep over the dropout).
 
-Which values are swept can be modified inside the `.py` file.
+The values that are swept can be modified inside the `.py` file.
 
 # How to evaluate a model against one image.
 `eval_mask.py` evaluates a model against an image (which can be from CityScapes or anywhere else!) and returns a mask to be used for comparison.
