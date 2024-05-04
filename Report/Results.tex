@@ -80,7 +80,7 @@ As explained in the Reflections, this is one of the reasons why it might have be
 \begin{scriptsize}
 	\vspace{-\parskip}
 	\url{https://wandb.ai/mfixman-convolutional-team/work/runs/wspszqbr}
-	\hfill{} Wandb tag: \texttt{enhanced\_swin2}
+	\hfill{} Wandb tag: `\texttt{enhanced\_swin2}'
 \end{scriptsize}
 
 The Swin2 model has the lowest validation loss of the three models.
@@ -115,4 +115,34 @@ This is likely due to the pre-trained model not being able to capture the subtle
 \newpage{}
 
 \subsection{Comparisons}
-\label{comparisons}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=.9\textwidth]{iou_scores.png}
+	\caption{Intersection over Union and instance intersection over union scores of the three classifiers}
+	\label{comparisons}
+\end{figure}
+
+We previously discussed the necessity to use common metrics about the images other than the categorical cross-entropy used for the loss.
+\Cref{comparisons} shows the intesection-over-union and instance intersection-over-union scores of each classifier.
+
+% Surprisingly, in none of the classifiers there is much of a difference between these scores.
+% This might happen since all our models are deep and can detect both large and small features pretty well.
+% Additionally, the coarse dataset does not include much data about smaller objects.
+
+What's more surprising is that the Swin2-JNet model, which had the best categorical cross-entropy loss and was comparable to the UNet nodel, is actually \emph{worse} than the baseline model in this metric.
+This is not a weakness of the Swin2 model, but of the IoU metric: ``patchiness'' doesn't make a big difference on the score, while large false positive differences (which might be incorrect in the coarse dataset) do.
+
+\begin{figure}[h]
+	\begin{subfigure}{.5\textwidth}
+		\includegraphics[width=\textwidth]{city_images/baseline_comparison_1.png} \\
+		\includegraphics[width=\textwidth]{city_images/baseline_comparison_2.png}
+		\caption{Image segmentation by the baseline model.}
+	\end{subfigure}
+	\begin{subfigure}{.5\textwidth}
+		\includegraphics[width=\textwidth]{city_images/swin2_comparison_1.png} \\
+		\includegraphics[width=\textwidth]{city_images/swin2_comparison_2.png}
+		\caption{Image segmentation by the Swin2-JNet model.}
+	\end{subfigure}
+	\caption{Comparison between the baseline and enhanced Swin2-JNet models for some cities. While the baseline model has a better IoU scores, the results are noticeably worse; this is a weakness of the scores rather than of the models.}
+\end{figure}
