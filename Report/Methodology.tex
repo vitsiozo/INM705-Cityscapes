@@ -2,21 +2,6 @@
 
 \section{Training Methodology}
 
-\subsection{Transforming and Enhancing Data}
-% In our test runs, the images in the input data are resized to $768 \times 768$.
-% This size presents a good balance between model performance and training speed: the final results of the models were almost identical to using the entire size of $2048 \times 1024$.
-% Additionally, this new size makes it possible to use pretrained Swin2 in the entire data instead of having to separate the images of stretch it separately.
-
-% The loss of the final mask is calculated on the small, resized image.
-% When evaluating, the final mask is stretched to its original larger size.
-
-% Additionally, we experimented with creating random transforms of the input data, including random flips and random crops.
-
-We experimented with creating random transforms of the input data, including random flips and random crops.
-
-In different experiments these transforms either replaced or augmented the original training data.
-However, this is not present in the final models as their results weren't conclusive: since the original data is complete enough, adding these transforms only made the results on the validation set worse.
-
 \subsection{Loss function}
 
 The choice of loss function is crucial for the performance of our model.
@@ -38,12 +23,28 @@ Since it contradicts some existing literature\cite{dice_loss}, it warrants more 
 While ignoring background pixels produces better metrics in IoU loss than regular categorical cross-entropy, in the actual results pixels that should be marked as background tend to have another arbitrary category.
 The objective of this work is to produce a good mask for city scenes, so not ignoring pixels is preferable despite the hit in metrics.
 
-\begin{figure}
+\begin{figure}[b]
 	\centering
 	\includegraphics[width=.90\textwidth]{cce_vs_iou_loss.png}
 	\caption{IoU score for UNet models trained to minimise both categorical cross-entropy and a related IoU loss depending on the epoch. Surprisingly, the one that optimises CCE has better results.}
 	\label{iou_vs_cce}
 \end{figure}
+
+\subsection{Transforming and Enhancing Data}
+% In our test runs, the images in the input data are resized to $768 \times 768$.
+% This size presents a good balance between model performance and training speed: the final results of the models were almost identical to using the entire size of $2048 \times 1024$.
+% Additionally, this new size makes it possible to use pretrained Swin2 in the entire data instead of having to separate the images of stretch it separately.
+
+% The loss of the final mask is calculated on the small, resized image.
+% When evaluating, the final mask is stretched to its original larger size.
+
+% Additionally, we experimented with creating random transforms of the input data, including random flips and random crops.
+
+We experimented with creating random transforms of the input data, including random flips and random crops.
+
+In different experiments these transforms either replaced or augmented the original training data.
+However, this is not present in the final models as their results weren't conclusive: since the original data is complete enough, adding these transforms only made the results on the validation set worse.
+
 
 \subsection{Optimiser and Scheduler}
 
@@ -54,7 +55,7 @@ Initial experiments produced a clear overfit in most complex after about 10 step
 To prevent this overfitting, among many other solutions, we implemented a \textbf{Step Scheduler} which lowers the learning rate every 10 steps by a certain factor, $\gamma$.
 This can be seen in \cref{gamma_vs_nogamma}.
 
-\begin{figure}
+\begin{figure}[h]
 	\centering
 	\includegraphics[width=.90\textwidth]{gamma_vs_nogamma.png}
 	\caption{Differences between training and validation loss of a classifier that dynamically adjusts its learning rate every 10 steps and one that doesn't. While both classifiers overfit, the dynamic learning rate makes this process slower and the eventual validation loss reaches better values.}
@@ -63,6 +64,7 @@ This can be seen in \cref{gamma_vs_nogamma}.
 
 The ideal value of $\gamma$ depends on other hyperparameters, and was thus found in a hyperparameter sweep in \cref{param_sweep_results}.
 
+% \newpage{}
 \subsection{Early Stopping}
 
 Our input data is large and, even with many different kinds of regularisation, all models overfit after so many epochs.
@@ -123,7 +125,17 @@ The results can be found in \cref{param_sweep}, with the best parameters in \cre
 	\label{param_sweep_results}
 \end{table}
 
-\begin{figure}[t]
+In addition to the best hyperparameters for our models, this parameter sweep gives some interesting information about the models.
+\begin{enumerate}
+	\item In both cases, runs with $\text{LR} = 10^{-3}$ beat the ones with $\text{LR} = 10^{-4}$. The second initial learning rate is likely too small.
+	\item In the UNet model, both a variable learning rate and a nonzero \lt{} weight decay are good predictors for validation loss.
+		This is not true in the Swin2-JNet model, where models with positive weight decay and no variable learning rate have a consistently better validation loss than ones with variable learning rate.
+		This second case is likely due to dropout: the winner models have positive dropout (not shown in the scatterplot due to lack of dimensionality), which prevents overfitting better than a variable learning rate.
+\end{enumerate}
+
+\vfill{}
+
+\begin{figure}[h]
 	\begin{subfigure}[t]{.35\textwidth}
 		\includegraphics[height=300pt]{unet_sweep.png}
 		\caption{Halving hyperparameter sweep for UNet model.}
@@ -139,10 +151,3 @@ The results can be found in \cref{param_sweep}, with the best parameters in \cre
 	\label{param_sweep}
 \end{figure}
 
-In addition to the best hyperparameters for our models, this parameter sweep gives some interesting information about the models.
-\begin{enumerate}
-	\item In both cases, runs with $\text{LR} = 10^{-3}$ beat the ones with $\text{LR} = 10^{-4}$. The second initial learning rate is likely too small.
-	\item In the UNet model, both a variable learning rate and a nonzero \lt{} weight decay are good predictors for validation loss.
-		This is not true in the Swin2-JNet model, where models with positive weight decay and no variable learning rate have a consistently better validation loss than ones with variable learning rate.
-		This second case is likely due to dropout: the winner models have positive dropout (not shown in the scatterplot due to lack of dimensionality), which prevents overfitting better than a variable learning rate.
-\end{enumerate}
