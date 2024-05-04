@@ -1,5 +1,5 @@
 \section{Model Architectures}
-\subsection{Baseline model: Fully Convolutional Network \phantom{xx}\small\texttt{models/SimpleFCN.py}}
+\subsection{Baseline model: Fully Convolutional Network \tpdf{\phantom{xx}\small\texttt{models/SimpleFCN.py}}}
 
 Modern, state-of-the-art techniques for image analysis involve convolutional neural networks (CNNs) in their implementation. CNNs can be used to extract vital information from spatial features, which allow us to classify and segment objects in images. A type of neural network architecture designed specifically for semantic segmentation is the Fully Convolutional Network (FCN). This architecture, developed by researchers from UC Berkeley in 2014 \cite{DBLP:journals/corr/LongSD14}, has been influential in advancing the field of computer vision, particularly in tasks requiring dense prediction, like semantic segmentation. 
 
@@ -29,7 +29,7 @@ This model produces a result that's \textit{good enough}, but it can be improved
 
 Following are two enhanced models, both with a significantly better result.
 
-\subsection{Enhanced Model 1: UNet \phantom{MMMMMMMMMMMMx}\small\texttt{models/UNet.py}}
+\subsection{Enhanced Model 1: UNet \tpdf{\phantom{MMMMMMMMMMMMx}\small\texttt{models/UNet.py}}}
 
 The first enhanced model for our image segmentation task is a UNet model\cite{unet}.
 
@@ -46,7 +46,7 @@ In practice, these skip connections give the model a significant improvement in 
 
 The best hyperparameters for this model and the following one were found in a parameter sweep in \cref{param_sweep}.
 
-\subsection{Enhanced Model 2: Swin transformer + JNet \phantom{xx}\small\texttt{models/Swin2Base.py}}
+\subsection{Enhanced Model 2: Swin transformer + JNet \tpdf{\phantom{xx}\small\texttt{models/Swin2Base.py}}}
 
 \begin{figure}
 	\centering
