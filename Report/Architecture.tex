@@ -1,14 +1,14 @@
 \section{Model Architectures}
 \subsection{Baseline model: Fully Convolutional Network \tpdf{\phantom{xx}\small\texttt{models/SimpleFCN.py}}}
 
-Modern, state-of-the-art techniques for image analysis involve convolutional neural networks (CNNs) in their implementation. CNNs can be used to extract vital information from spatial features, which allow us to classify and segment objects in images. A type of neural network architecture designed specifically for semantic segmentation is the Fully Convolutional Network (FCN). This architecture, developed by researchers from UC Berkeley in 2014 \cite{DBLP:journals/corr/LongSD14}, has been influential in advancing the field of computer vision, particularly in tasks requiring dense prediction, like semantic segmentation. 
-
-\begin{figure}
+\begin{figure}[h]
     \centering 
     \includegraphics[width=0.6\textwidth]{SimpleFCN.png}
     \caption{The architecture of the baseline model}
     \label{baseline_model}
 \end{figure}
+
+Modern, state-of-the-art techniques for image analysis involve convolutional neural networks (CNNs) in their implementation. CNNs can be used to extract vital information from spatial features, which allow us to classify and segment objects in images. A type of neural network architecture designed specifically for semantic segmentation is the Fully Convolutional Network (FCN). This architecture, developed by researchers from UC Berkeley in 2014 \cite{DBLP:journals/corr/LongSD14}, has been influential in advancing the field of computer vision, particularly in tasks requiring dense prediction, like semantic segmentation. 
 
 Our baseline model, illustrated in \cref{baseline_model}, is a simple fully-convolutional network with 3 encoding and 3 decoding steps.
 
@@ -29,6 +29,7 @@ This model produces a result that's \textit{good enough}, but it can be improved
 
 Following are two enhanced models, both with a significantly better result.
 
+\newpage{}
 \subsection{Enhanced Model 1: UNet \tpdf{\phantom{MMMMMMMMMMMMx}\small\texttt{models/UNet.py}}}
 
 The first enhanced model for our image segmentation task is a UNet model\cite{unet}.
