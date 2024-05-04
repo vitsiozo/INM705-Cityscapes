@@ -51,6 +51,9 @@ class Upsampler2(nn.Module):
 class Backbone(nn.Module):
     def __init__(self):
         super().__init__()
+
+        logging.getLogger('timm').setLevel(logging.WARNING)
+
         model_name = 'swinv2_base_window8_256.ms_in1k'
         img_size = 768
 

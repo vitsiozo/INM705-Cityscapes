@@ -92,7 +92,7 @@ It can also optionally create a second image of comparison with a ground truth.
 Example usages:
 ```
 python eval_mask.py enhanced_swin2 city_file.png output_mask.png
-python eval_mask.py --gt-output ground_truth.png enhanced_swin2 data/leftImg8bit/val/frankfurt/frankfurt_000000_000294_leftImg8bit.png output_mask.png
+python eval_mask.py --gt-output ground_truth.png --model enhanced_swin2 data/leftImg8bit/val/frankfurt/frankfurt_000000_000294_leftImg8bit.png output_mask.png
 ```
 
 The model name (`enhanced_swin2`) can be either a Wandb model name or a Wandb tag; the evaluator takes its config and the latest artifact (which is the one with the best validation score).
