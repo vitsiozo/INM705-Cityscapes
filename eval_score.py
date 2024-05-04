@@ -13,6 +13,8 @@ from torch.utils.data import DataLoader
 from CityScapesDataset import CityScapesDataset
 from Model import Model
 
+from DiceLoss import DiceLoss
+from JaccardLoss import IoUScore, InstanceIoUScore
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -37,6 +39,7 @@ class Evaluator:
         self.eval_losses = {
             'IoU Score': IoUScore(ignore_index = 0),
             'iIoU Score': InstanceIoUScore(ignore_index = 0),
+            'Dice Loss': DiceLoss(),
         }
 
         self.model = model
@@ -59,6 +62,7 @@ class Evaluator:
         total_loss = tensor(0.).to(self.device)
         total_extra_losses = {k: tensor(0.).to(self.device) for k in self.eval_losses.keys()}
         for e, (images, masks) in enumerate(dataloader, start = 1):
+            logging.info(f'Starting to run {e}/{len(dataloader)}')
             images, masks = images.to(self.device), masks.to(self.device)
 
             loss, extra_losses = self.eval_step(images, masks)
@@ -120,7 +124,7 @@ def main():
         out_channels = CityScapesDataset.n_classes,
         dropout = config.get('dropout'),
     ).to(args.device)
-    weights = torch.load(artifact)
+    weights = torch.load(artifact, map_location = args.device)
     model.load_state_dict(weights)
     model.eval()
 
@@ -128,8 +132,8 @@ def main():
     score, extra_scores = evaluator.evaluate(dataloader)
     logging.info('Final score calculated')
     logging.info(f'Final CCE loss for {args.run_on}: {score}')
-    for name, loss in extra_losses.items():
-        logging.info('Final {name} for {args.run_on}: {loss}')
+    for name, loss in extra_scores.items():
+        logging.info(f'Final {name} for {args.run_on}: {loss}')
 
 if __name__ == '__main__':
     main()
