@@ -36,7 +36,7 @@ class Evaluator:
         # See report for more details.
         self.criterion = CrossEntropyLoss(reduction = 'sum')
         self.accumulate_fn = lambda loss, loader: loss / len(loader.dataset)
-        self.extra_fn = lambda loss, loader: loss / len(loader)
+        self.score_fn = lambda loss, loader: loss / len(loader)
         self.eval_losses = {
             'IoU Score': IoUScore(ignore_index = 0),
             'iIoU Score': InstanceIoUScore(ignore_index = 0),
@@ -73,7 +73,7 @@ class Evaluator:
 
             logging.info(f'Running {e}/{len(dataloader)}: partial loss = {loss / len(images):g}')
 
-        eval_losses = {k: self.extra_fn(v, dataloader) for k, v in total_extra_losses.items()}
+        eval_losses = {k: self.score_fn(v, dataloader) for k, v in total_extra_losses.items()}
         return self.accumulate_fn(total_loss, dataloader), eval_losses
 
 # Gets a run that matches `tag` as either a tag (ie 'EnhancedSwin2') or

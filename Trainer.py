@@ -37,6 +37,8 @@ class Trainer:
         self.criterion = config['loss_fn']
         self.accumulate_fn = config['accumulate_fn']
 
+        # We always want to accumulate scores by batch, not by sample (average of averages).
+        self.score_fn = lambda loss, loader: loss / len(loader)
         self.eval_losses = eval_losses
 
         self.wandb = wandb_run or wandb
@@ -118,7 +120,7 @@ class Trainer:
             self.scheduler.step()
             return self.accumulate_fn(total_loss, dataloader)
 
-        eval_losses = {k: self.accumulate_fn(v, dataloader) for k, v in total_extra_losses.items()}
+        eval_losses = {k: self.score_fn(v, dataloader) for k, v in total_extra_losses.items()}
         return self.accumulate_fn(total_loss, dataloader), eval_losses
 
     @staticmethod
