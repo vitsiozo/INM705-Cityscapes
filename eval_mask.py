@@ -145,7 +145,7 @@ def main():
 		out_channels = CityScapesDataset.n_classes,
 		dropout = config.get('dropout'),
 	).to(args.device)
-	weights = torch.load(artifact)
+	weights = torch.load(artifact, map_location = args.device)
 	model.load_state_dict(weights)
 	model.eval()
 
