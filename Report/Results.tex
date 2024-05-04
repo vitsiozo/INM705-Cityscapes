@@ -131,6 +131,8 @@ We previously discussed the necessity to use common metrics about the images oth
 % This might happen since all our models are deep and can detect both large and small features pretty well.
 % Additionally, the coarse dataset does not include much data about smaller objects.
 
+We can clearly see that the IoU scores follow closely their categorical cross-entropy loss, which means that this loss is a good way to learn the general case.
+
 What's more surprising is that the Swin2-JNet model, which had the best categorical cross-entropy loss and was comparable to the UNet nodel, is actually \emph{worse} than the baseline model in this metric.
 This is not a weakness of the Swin2 model, but of the IoU metric: ``patchiness'' doesn't make a big difference on the score, while large false positive differences (which might be incorrect in the coarse dataset) do.
 
@@ -147,3 +149,18 @@ This is not a weakness of the Swin2 model, but of the IoU metric: ``patchiness''
 	\end{subfigure}
 	\caption{Comparison between the baseline and enhanced Swin2-JNet models for some cities. While the baseline model has a better IoU scores, the results are noticeably worse; this is a weakness of the scores rather than of the models.}
 \end{figure}
+
+\subsection{So which model is better?}
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{>{\bfseries}r | r r r}
+		\toprule
+		Model & CCE Loss & IoU Loss & Dice Loss \\
+		\midrule
+		Baseline & \num{1844272} & 15.64 & 0.97 \\
+		UNet & \num{1018490} & 22.16 & 0.97 \\
+		Swin2 & \num{869488} & 23.34 & 0.97 \\
+		\bottomrule
+	\end{tabular}
+\end{table}
