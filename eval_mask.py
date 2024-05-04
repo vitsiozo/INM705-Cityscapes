@@ -27,9 +27,10 @@ def parse_args():
 	parser = argparse.ArgumentParser(
 			description = 'Downloads a Wandb Artifact and calculates its mask',
 			epilog = '''Example usages:
-				python eval_mask.py enhanced_swin2 city_file.png output_mask.png
-				python eval_mask.py --gt-output ground_truth.png enhanced_swin2 data/leftImg8bit/val/frankfurt/frankfurt_000000_000294_leftImg8bit.png output.png
-			'''
+python eval_mask.py baseline city_file.png output_mask.png
+python eval_mask.py --gt-output ground_truth.png enhanced_swin2 data/leftImg8bit/val/frankfurt/frankfurt_000000_000294_leftImg8bit.png output.png
+			''',
+            formatter_class = argparse.RawDescriptionHelpFormatter,
 	)
 
 	parser.add_argument('--batch-size', type = int, default = 16, help = 'Batch size. Lower this if the program runs out of memory.')

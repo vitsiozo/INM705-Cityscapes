@@ -1,1 +1,18 @@
 \section{Results}
+
+\subsection{Baseline Model}
+
+\subsection{Enhanced Model 1: UNet}
+
+\subsection{Enhanced Model 2: Swin2 \\ \scriptsize \url{https://wandb.ai/mfixman-convolutional-team/work/runs/wspszqbr}}
+
+The Swin2 model has the lowest validation loss of the three models.
+The dropout makes it overfit late and slowly; the best loss is found only after 30 epochs, and ever after overfitting the training loss drops slowly.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=.85\textwidth]{swin2_loss.png}
+	\caption{Swin2-JNet results}
+\end{figure}
+
+\subsection{Comparisons}
