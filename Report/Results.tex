@@ -78,14 +78,14 @@ As explained in the Reflections, this is one of the reasons why it might have be
 
 \newpage{}
 
-\subsection{Enhanced Model 2: Swin2}
+\subsection{Enhanced Model 2: Swin2-JNet}
 \begin{scriptsize}
 	\vspace{-\parskip}
 	\url{https://wandb.ai/mfixman-convolutional-team/work/runs/sty5iun8}
 	\hfill{} Wandb tag: `\texttt{enhanced\_swin2}'
 \end{scriptsize}
 
-While the Swin2 model has the lowest validation loss of all three models, this isn't comparable since this loss ignores pixels that are marked as ``background'' in the ground truth.
+While the Swin2-JNet model has the lowest validation loss of all three models, this isn't comparable since this loss ignores pixels that are marked as ``background'' in the ground truth.
 
 The dropout and pre-trained weights seem to slow its overfitting, and despite considerable overfitting of the training set after 20 epochs the model still learns relevant information.
 The validation loss is at its minimum after 28 epochs.
