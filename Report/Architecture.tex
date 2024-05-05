@@ -10,7 +10,7 @@
 
 Modern, state-of-the-art techniques for image analysis involve convolutional neural networks (CNNs) in their implementation. CNNs can be used to extract vital information from spatial features, which allow us to classify and segment objects in images. A type of neural network architecture designed specifically for semantic segmentation is the Fully Convolutional Network (FCN). This architecture, developed by researchers from UC Berkeley in 2014 \cite{DBLP:journals/corr/LongSD14}, has been influential in advancing the field of computer vision, particularly in tasks requiring dense prediction, like semantic segmentation. 
 
-Our baseline model, illustrated in \cref{baseline_model}, is a simple fully-convolutional network with 3 encoding and 3 decoding steps.
+Our baseline model, illustrated in \cref{baseline_model}, is a simple fully-convolutional network with 3 encoding and 3 decoding steps. Images and masks have been resized to a square shape of 768$\times$768 pixels when loading the dataset. This allowed us to have increased efficiency in terms of computational resources, while not sacrificing too much performance. 
 
 \begin{description}
 	\item[Each encoding step] \phantom{hello}
