@@ -9,8 +9,8 @@ Not only it has the highest IoU and \iiouc{} scores of the dataset by a little, 
 Why is this model better than UNet, which has an equivalent size?
 We propose several reasons.
 \begin{enumerate}[topsep=0pt]
-	\item The attention in the Swin2 transformers provide a significative improvement to small details, such as people in the background.
-	\item Using transfer learning from a pre-trained means that a lot of basic data, such as lines of objects, are already learned.
+	\item The attention in the Swin2 transformers provide a significant improvement to small details, such as people in the background.
+	\item Using transfer learning from a pre-trained model means that a lot of basic data, such as lines of objects, are already learned.
 		\begin{enumerate}
 			\item Moreover, the use of skip connections with the data from a feature pyramid allows the classifier to learn from several resolutions of this feature.
 		\end{enumerate}
@@ -34,4 +34,4 @@ In the near future we plan to train our Swin2-JNet model classifier in both the 
 If our calculations in the validation set are roughly correct, we should be roughly in the best two thirds of \href{https://www.cityscapes-dataset.com/benchmarks/#pixel-level-results}{the CityScapes Benchmark Competition}, despite not even using the fine dataset.
 
 The objective of this project was not to win a competition, which is why it's important to be wary of overfocusing on maximising metrics.
-While the IoU score could might have been higher, the results in our own subjective test set of \hyperref[hackneyscapes]{HackneyScapes} speak for themselves.
+While the IoU score could have been higher, the results in our own subjective test set of \hyperref[hackneyscapes]{HackneyScapes} speak for themselves.
