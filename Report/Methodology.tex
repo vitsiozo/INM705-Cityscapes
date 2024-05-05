@@ -27,7 +27,7 @@ However, a bad classifier might ``hallucinate'' bad pixels in areas of the backg
 The objective of this work is to produce a good mask for city scenes, so not ignoring pixels might be preferable despite the hit in metrics.
 To produce a balanced approach, we will train the first two models (baseline and UNet) on regular categorical cross-entropy loss.
 
-In our experiments the second enhanced model (Swin2-JNet) is considerably stronger and less likely to have false positives, so we will train it ignoring these background pixels to later compare it to the other models.
+In our experiments the second enhanced model (Swin2-JNet) is considerably stronger and likely to have fewer false positives compared to the other models, so we will train it ignoring these background pixels to later compare it to the other models.
 
 \begin{figure}[b]
 	\centering
