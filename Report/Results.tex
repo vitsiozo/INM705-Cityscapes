@@ -131,8 +131,12 @@ We previously discussed the necessity to use common metrics about the images oth
 % This might happen since all our models are deep and can detect both large and small features pretty well.
 % Additionally, the coarse dataset does not include much data about smaller objects.
 
-What's more surprising is that the Swin2-JNet model, which had the best categorical cross-entropy loss and was comparable to the UNet nodel, is actually \emph{worse} than the baseline model in this metric.
-This is not a weakness of the Swin2 model, but of the IoU metric: ``patchiness'' doesn't make a big difference on the score, while large false positive differences (which might be incorrect in the coarse dataset) do.
+We can clearly see that the IoU scores follow closely their categorical cross-entropy loss, which means that this loss is a good way to learn the general case.
+Additionally, the \iiouc{} score trails closely to the IoU score despite none of the model being trained with weights; this is both due to the abilities of the classifiers to find small details, and also to the coarseness of the coarse dataset.
+
+% While all three models produce a ``mostly'' correct result, the IoU score in the baseline model is penalised by the patchiness of ts predictions as seen in \cref{baseline_vs_swin2}.
+Both enhanced classifiers seem to reach roughly the same IoU score by epoch 15, when our early stopping stops the training of the UNet model.
+It's likely that, after this point, the UNet model was getting better at detecting non-background classes at the expense of mistakes in background pixels which are not counted for this score.
 
 \begin{figure}[h]
 	\begin{subfigure}{.5\textwidth}
@@ -146,4 +150,21 @@ This is not a weakness of the Swin2 model, but of the IoU metric: ``patchiness''
 		\caption{Image segmentation by the Swin2-JNet model.}
 	\end{subfigure}
 	\caption{Comparison between the baseline and enhanced Swin2-JNet models for some cities. While the baseline model has a better IoU scores, the results are noticeably worse; this is a weakness of the scores rather than of the models.}
+	\label{baseline_vs_swin2}
 \end{figure}
+
+\subsection{So which model is better?}
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{>{\bfseries}r | r r r}
+		\toprule
+		Model & CCE Loss & IoU Loss & Dice Loss \\
+		\midrule
+		Baseline & \num{1844272} & 15.64 & 0.97 \\
+		UNet & \num{1018490} & 22.16 & 0.97 \\
+		Swin2 & \num{869488} & 23.34 & 0.97 \\
+		\bottomrule
+	\end{tabular}
+	\caption{Comparison of losses between three models}
+\end{table}
