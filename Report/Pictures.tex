@@ -1,2 +1,33 @@
-\section{Model Comparison via Pictures}
+\section{HackneyScapes!}
 \label{hackneyscapes}
+
+\begin{figure}[H]
+	\begin{subfigure}[t]{.32\textwidth}
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3159_baseline.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3171_baseline.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3200_baseline.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3164_baseline.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3173_baseline.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3204_baseline.png}
+		\caption{Baseline Model}
+	\end{subfigure}
+	\hfill{}\begin{subfigure}[t]{.32\textwidth}
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3159_unet.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3171_unet.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3200_unet.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3164_unet.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3173_unet.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3204_unet.png}
+		\caption{Enhanced UNet Model}
+	\end{subfigure}
+	\hfill{}\begin{subfigure}[t]{.32\textwidth}
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3159_swin2_no_background.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3171_swin2_no_background.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3200_swin2_no_background.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3164_swin2_no_background.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3173_swin2_no_background.png} \\[5pt]
+		\includegraphics[width=\textwidth]{city_images/HackneyScapes/Hackney3204_swin2_no_background.png}
+		\caption{Enhanced Swin2-JNet Model}
+	\end{subfigure}
+	\caption{Results of our image segmentation models when parsed on city pictures outside the CityScapes dataset. These pictures are taken around the London borough of Hackney, thus HackneyScapes.}
+\end{figure}
