@@ -14,6 +14,7 @@ Instead, it badly underfits the data and doesn't give the best result.
 	\centering
 	\includegraphics[width=.9\textwidth]{baseline_loss.png}
 	\caption{Baseline loss by epoch}
+	\label{baseline_model_loss}
 \end{figure}
 
 The results of this model are notoriously ``blocky'': while there are clusters of correct pixels where they should go, it seems the model has problems filling those clusters.
@@ -52,6 +53,7 @@ While the UNet model has considerably better loss than the baseline model, it ov
 	\centering
 	\includegraphics[width=.9\textwidth]{unet_loss.png}
 	\caption{UNet model loss by epoch.}
+	\label{unet_model_loss}
 \end{figure}
 
 In addition to having a good loss, it's considerably better at the task of image segmentation than the baseline model
@@ -92,6 +94,7 @@ The validation loss is at its minimum after 28 epochs.
 	\centering
 	\includegraphics[width=.9\textwidth]{swin2_loss.png}
 	\caption{Swin2-JNet loss by epoch.}
+	\label{swin2_model_loss}
 \end{figure}
 
 The pre-trained weights in the transformer encoder seem to capture a lot of relevant picture information; this is layer re-trained in the context is CityScapes by the decoder.
@@ -142,6 +145,7 @@ What's surprising is that the IoU score of the Swin2 model is considerably highe
 This is likely due to its ability to generalise: despite not having ground truth, the neighborhood values of these background pixels provide useful information for the model.
 
 \subsection{So which model is better?}
+\label{which_one_wins}
 
 \begin{table}[h]
 	\centering
