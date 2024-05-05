@@ -44,7 +44,7 @@ Traditional IoU can be biased towards larger objects (which can dominate the sco
 The metric is defined in the following way.
 \begin{equation*}
 	\text{iIoU} = \frac{\text{iTP}}{\text{iTP} + \text{FP} + \text{iFN}}	
-\end{equation}
+\end{equation*}
 
 Here iTP are true positives that are weighted by the ratio of the class's average instance size to the size of the respective ground truth instance. False negatives are similarly adjusted based on the relative size of the object they belong to. The count of false positives remains unweighted, since these do not correspond to a specific instance size (they are areas that are incorrectly labelled as an object).
 
