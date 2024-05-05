@@ -31,7 +31,7 @@ In our experiments the second enhanced model (Swin2-JNet) is considerably strong
 
 \begin{figure}[b]
 	\centering
-	\includegraphics[width=.90\textwidth]{cce_vs_iou_loss.png}
+	\includegraphics[width=.81\textwidth]{cce_vs_iou_loss.png}
 	\caption{IoU score for an early model based on UNet that was trained to minimise both categorical cross-entropy and a related IoU loss depending on the epoch. Surprisingly, the one that optimises CCE has better results.}
 	\label{iou_vs_cce}
 \end{figure}
@@ -51,7 +51,6 @@ We experimented with creating random transforms of the input data, including ran
 In different experiments these transforms either replaced or augmented the original training data.
 However, this is not present in the final models as their results weren't conclusive: since the original data is complete enough, adding these transforms only made the results on the validation set worse.
 
-
 \subsection{Optimiser and Scheduler}
 
 All mature models use the \textbf{AdamW} optimiser, which decouples weight decay from the optimisation process\cite{adamW}.
@@ -61,7 +60,7 @@ Initial experiments produced a clear overfit in most complex after about 10 step
 To prevent this overfitting, among many other solutions, we implemented a \textbf{Step Scheduler} which lowers the learning rate every 10 steps by a certain factor, $\gamma$.
 This can be seen in \cref{gamma_vs_nogamma}.
 
-\begin{figure}[h]
+\begin{figure}
 	\centering
 	\includegraphics[width=.90\textwidth]{gamma_vs_nogamma.png}
 	\caption{Differences between training and validation loss of a classifier that dynamically adjusts its learning rate every 10 steps and one that doesn't. While both classifiers overfit, the dynamic learning rate makes this process slower and the eventual validation loss reaches better values.}
@@ -104,7 +103,7 @@ In order to test all of them, for the two enhanced models we run a hyperparamete
 
 The entire dataset of 2994 images is very large, and making this 36-parameter sweep cost-prohibitive.
 
-To run a parameter sweep, we do a \textbf{Halving Parameter Sweep}\cite{halving_param_sweep}.
+To run a parameter sweep on all possible combinations of hyperparameters, we instead run a \textbf{Halving Parameter Sweep}\cite{halving_param_sweep}.
 \begin{enumerate}
 	\item Train classifiers for 20 epochs using a randomly sampled subset of the data for each combination of hyperparameters.
 	\item Split the results in two. Discard the half with the highest validation loss, and keep the half with the lower loss.
@@ -119,9 +118,9 @@ The results can be found in \cref{param_sweep}, with the best parameters in \cre
 \begin{table}[h]
 	\centering
 	\small
-	\begin{tabular}{>{\bfseries}r | c c c c | r r r}
+	\begin{tabular}{>{\bfseries}r | c c c c | r c c}
 		\toprule
-		Model & LR & $\gamma$ & \lt{} & Dropout & Val Loss & IoU & iIoU \\
+		Model & LR & $\gamma$ & \lt{} & Dropout & Val Loss & IoU & \iiouc{} \\
 		\midrule
 		UNet & $10^{-3}$ & $\sqrt{0.1}$ & $0$ & & \num{221343} & 17.56 & 20.30 \\
 		Swin2-J & $10^{-3}$ & 1 & $10^{-4}$ & $0.05$ & \num{78946} & 25.47 & 27.60 \\
@@ -131,12 +130,19 @@ The results can be found in \cref{param_sweep}, with the best parameters in \cre
 	\label{param_sweep_results}
 \end{table}
 
+The scores of this parameter sweep will likely be lower than the final scores of the models since even at the last stage they are training with less data.
+
+However, we can be relatively certain that the \emph{order} of the results of each step is roughly correct.
+
+\newpage{}
 In addition to the best hyperparameters for our models, this parameter sweep gives some interesting information about the models.
 \begin{enumerate}
 	\item In both cases, runs with $\text{LR} = 10^{-3}$ beat the ones with $\text{LR} = 10^{-4}$. The second initial learning rate is likely too small.
+		\emph{All} of the models that lost the first round have $\text{LR} = 10^{-4}$.
 	\item In the UNet model, both a variable learning rate and a nonzero \lt{} weight decay are good predictors for validation loss.
 		This is not true in the Swin2-JNet model, where models with positive weight decay and no variable learning rate have a consistently better validation loss than ones with variable learning rate.
 		This second case is likely due to dropout: the winner models have positive dropout (not shown in the scatterplot due to lack of dimensionality), which prevents overfitting better than a variable learning rate.
+	\item In a similar way, the strong regularisation provided by dropout makes the case of $\gamma = 1$ the best for the Swin2-JNet model.
 \end{enumerate}
 
 \vfill{}
