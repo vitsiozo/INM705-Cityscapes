@@ -56,7 +56,7 @@ However, this is not present in the final models as their results weren't conclu
 All mature models use the \textbf{AdamW} optimiser, which decouples weight decay from the optimisation process\cite{adamW}.
 This model produced a more effective \lt{} regularisation than other similar classifiers, and generally better results than both the Adam and Adamax optimiser.
 
-Initial experiments produced a clear overfit in most complex after about 10 steps, which became noticeable after 20.
+Initial experiments produced a clear overfit in most models after about 10 steps, which became noticeable after 20.
 To prevent this overfitting, among many other solutions, we implemented a \textbf{Step Scheduler} which lowers the learning rate every 10 steps by a certain factor, $\gamma$.
 This can be seen in \cref{gamma_vs_nogamma}.
 
