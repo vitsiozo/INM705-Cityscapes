@@ -3,6 +3,7 @@
 \section{Training Methodology}
 
 \subsection{Loss function}
+\label{loss_function_section}
 
 The choice of loss function is crucial for the performance of our model.
 
@@ -20,8 +21,13 @@ Using \textbf{Categorical Cross-Entropy} provided better results in the relevant
 This surprising result, which can be seen in \cref{iou_vs_cce}, is likely due to the difference in depth of the loss functions.
 Since it contradicts some existing literature\cite{dice_loss}, it warrants more exploration later.
 
-While ignoring background pixels produces better metrics in IoU loss than regular categorical cross-entropy, in the actual results pixels that should be marked as background tend to have another arbitrary category.
-The objective of this work is to produce a good mask for city scenes, so not ignoring pixels is preferable despite the hit in metrics.
+Ignoring background pixels produces better metrics in IoU score than regular categorical cross-entropy.
+However, a bad classifier might ``hallucinate'' bad pixels in areas of the background, and these false positives could cause bigger problem than unknown pixels despite not being part of the IoU Score.
+
+The objective of this work is to produce a good mask for city scenes, so not ignoring pixels might be preferable despite the hit in metrics.
+To produce a balanced approach, we will train the first two models (baseline and UNet) on regular categorical cross-entropy loss.
+
+In our experiments the second enhanced model (Swin2-JNet) is considerably stronger and less likely to have false positives, so we will train it ignoring these background pixels to later compare it to the other models.
 
 \begin{figure}[b]
 	\centering

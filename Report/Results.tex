@@ -79,12 +79,14 @@ As explained in the Reflections, this is one of the reasons why it might have be
 \subsection{Enhanced Model 2: Swin2}
 \begin{scriptsize}
 	\vspace{-\parskip}
-	\url{https://wandb.ai/mfixman-convolutional-team/work/runs/wspszqbr}
+	\url{https://wandb.ai/mfixman-convolutional-team/work/runs/sty5iun8}
 	\hfill{} Wandb tag: `\texttt{enhanced\_swin2}'
 \end{scriptsize}
 
-The Swin2 model has the lowest validation loss of the three models.
-The dropout makes it overfit late and slowly; the best loss is found only after 30 epochs, and ever after overfitting the training loss drops slowly.
+While the Swin2 model has the lowest validation loss of all three models, this isn't comparable since this loss ignores pixels that are marked as ``background'' in the ground truth.
+
+The dropout and pre-trained weights seem to slow its overfitting, and despite considerable overfitting of the training set after 20 epochs the model still learns relevant information.
+The validation loss is at its minimum after 28 epochs.
 
 \begin{figure}[h]
 	\centering
@@ -92,25 +94,25 @@ The dropout makes it overfit late and slowly; the best loss is found only after 
 	\caption{Swin2-JNet loss by epoch.}
 \end{figure}
 
-The pre-trained weights in the transformer encoder seem to capture a lot of relevant picture information, which is later trained and used in the decoder.
+The pre-trained weights in the transformer encoder seem to capture a lot of relevant picture information; this is layer re-trained in the context is CityScapes by the decoder.
 This shows the promise of transfer learning: by only requiring to learn small but relevant details of the image, we can achieve a good loss in just a bit of training.
 
 \begin{figure}[h]
 	\begin{subfigure}{.5\textwidth}
-		\includegraphics[width=\textwidth]{city_images/swin2_gt_pic.png}
+		\includegraphics[width=\textwidth]{city_images/swin2_no_background_gt_pic.png}
 		\caption{Ground truth}
+		\label{swin2_gt_image}
 	\end{subfigure}
 	\begin{subfigure}{.5\textwidth}
-		\includegraphics[width=\textwidth]{city_images/swin2_pic.png}
+		\includegraphics[width=\textwidth]{city_images/swin2_no_background_pic.png}
 		\caption{Result of the enhanced Swin2-JNet model.}
+		\label{swin2_result_image}
 	\end{subfigure}
 	\caption{Example result with a picture in the city of Lindau.}
 \end{figure}
 
-While the CCE metrics are better, the results seem slightly worse and less practical than the ones in the UNet enhanced model.
-For example, some classes hardly appear while many other ones appear in ``splooges'' of class.
-
-This is likely due to the pre-trained model not being able to capture the subtleties of these specific scene, since they were trained on other kinds of images.
+The best part of training models such as this to ignore background pixels is that is makes a good guess on what those pixels are.
+\Cref{swin2_result_image} can easily infer information that was on the background on \cref{swin2_gt_image}.
 
 \newpage{}
 
@@ -119,52 +121,48 @@ This is likely due to the pre-trained model not being able to capture the subtle
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=.9\textwidth]{iou_scores.png}
-	\caption{Intersection over Union and instance intersection over union scores of the three classifiers}
+	\includegraphics[width=.8\textwidth]{iou_scores.png}
+	\caption{IoU and \iiouc{} scores of the three classifiers}
 	\label{comparisons}
 \end{figure}
 
 We previously discussed the necessity to use common metrics about the images other than the categorical cross-entropy used for the loss.
-\Cref{comparisons} shows the intesection-over-union and instance intersection-over-union scores of each classifier.
+\Cref{comparisons} shows the intersection-over-union and class intersection-over-union scores of each classifier.
 
 % Surprisingly, in none of the classifiers there is much of a difference between these scores.
 % This might happen since all our models are deep and can detect both large and small features pretty well.
 % Additionally, the coarse dataset does not include much data about smaller objects.
 
-We can clearly see that the IoU scores follow closely their categorical cross-entropy loss, which means that this loss is a good way to learn the general case.
+We can clearly see that, in the first two cases, the IoU scores follow closely their categorical cross-entropy loss, which means that this loss is a good way to learn the general case.
 Additionally, the \iiouc{} score trails closely to the IoU score despite none of the model being trained with weights; this is both due to the abilities of the classifiers to find small details, and also to the coarseness of the coarse dataset.
 
-% While all three models produce a ``mostly'' correct result, the IoU score in the baseline model is penalised by the patchiness of ts predictions as seen in \cref{baseline_vs_swin2}.
-Both enhanced classifiers seem to reach roughly the same IoU score by epoch 15, when our early stopping stops the training of the UNet model.
-It's likely that, after this point, the UNet model was getting better at detecting non-background classes at the expense of mistakes in background pixels which are not counted for this score.
-
-\begin{figure}[h]
-	\begin{subfigure}{.5\textwidth}
-		\includegraphics[width=\textwidth]{city_images/baseline_comparison_1.png} \\
-		\includegraphics[width=\textwidth]{city_images/baseline_comparison_2.png}
-		\caption{Image segmentation by the baseline model.}
-	\end{subfigure}
-	\begin{subfigure}{.5\textwidth}
-		\includegraphics[width=\textwidth]{city_images/swin2_comparison_1.png} \\
-		\includegraphics[width=\textwidth]{city_images/swin2_comparison_2.png}
-		\caption{Image segmentation by the Swin2-JNet model.}
-	\end{subfigure}
-	\caption{Comparison between the baseline and enhanced Swin2-JNet models for some cities. While the baseline model has a better IoU scores, the results are noticeably worse; this is a weakness of the scores rather than of the models.}
-	\label{baseline_vs_swin2}
-\end{figure}
+What's surprising is that the IoU score of the Swin2 model is considerably higher than the rest, despite ``wasting'' processing power in learning data about background pixels.
+This is likely due to its ability to generalise: despite not having ground truth, the neighborhood values of these background pixels provide useful information for the model.
 
 \subsection{So which model is better?}
 
 \begin{table}[h]
 	\centering
-	\begin{tabular}{>{\bfseries}r | r r r}
+	\begin{tabular}{>{\bfseries}r | r r r r}
 		\toprule
-		Model & CCE Loss & IoU Loss & Dice Loss \\
+		Model & CCE Loss & IoU Score & iIoU Score & Dice Loss \\
 		\midrule
-		Baseline & \num{1844272} & 15.64 & 0.97 \\
-		UNet & \num{1018490} & 22.16 & 0.97 \\
-		Swin2 & \num{869488} & 23.34 & 0.97 \\
+		Baseline & \num{1844272} & 15.64 & 16.91 & 0.97 \\
+		UNet & \num{1018490} & 22.16 & 22.84 & 0.97 \\
+		Swin2-JNet & \num{869488} & 28.17 & 29.93 & 0.97 \\
 		\bottomrule
 	\end{tabular}
 	\caption{Comparison of losses between three models}
+	\label{result_scores}
 \end{table}
+
+In \cref{loss_function_section} we considered using the dice loss as either a loss or a score function to compare these results.
+Initial experiments were inconclusive, and the results in \cref{result_scores} confirm this: despite having identical dice loss, the three models are wildly different.
+
+The validation scores in \label{result_scores} show the Swin2 model to be the clear winner in CityScapes dataset.
+However, does it generalise well?
+
+We introduce ``HackneyScapes'', a series pictures taken by us in the London borough of Hackney to use as a testing set.
+As we have no ground truth, these have to be tested by subjective measures in \hyperref[hackneyscapes]{Appendix A}.
+
+Our subjective eyes confirm our metrics: \textbf{the Swin2-JNet model is clearly the winner!}
