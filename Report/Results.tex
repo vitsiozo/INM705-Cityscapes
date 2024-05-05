@@ -149,6 +149,7 @@ This is likely due to its ability to generalise: despite not having ground truth
 
 \begin{table}[h]
 	\centering
+	\footnotesize
 	\begin{tabular}{>{\bfseries}r | r r r r}
 		\toprule
 		Model & CCE Loss & IoU Score & iIoU Score & Dice Loss \\
@@ -162,7 +163,7 @@ This is likely due to its ability to generalise: despite not having ground truth
 	\label{result_scores}
 \end{table}
 
-In \cref{loss_function_section} we considered using the dice loss as either a loss or a score function to compare these results.
+% In \cref{loss_function_section} we considered using the dice loss as either a loss or a score function to compare these results.
 Initial experiments were inconclusive, and the results in \cref{result_scores} confirm this: despite having identical dice loss, the three models are wildly different.
 
 The validation scores in \label{result_scores} show the Swin2 model to be the clear winner in CityScapes dataset.

@@ -6,18 +6,20 @@ We changed many metrics, objectives, and models throughout its lifetime, learned
 From the models we tried, Swin2-JNet is the clear winner.
 Not only it has the highest IoU and \iiouc{} scores of the dataset, as shown in \cref{which_one_wins}, but when testing these models on real-world data in \hyperref[hackneyscapes]{Appendix A} the results are considerably better.
 
-Why is this model better than UNet, which has an equivalent size?
-We propose several reasons.
-\begin{enumerate}[topsep=0pt]
+Why is this model better than UNet, which has a similar size?
+We propose some reasons.
+\begin{enumerate}[topsep=0pt,itemsep=-3pt]
 	\item The attention in the Swin2 transformers provide a significant improvement to detecting small details, such as people in the background.
 	\item Using transfer learning from a pre-trained model means that a lot of basic data, such as lines of objects, are already learned.
+		\vspace{-1ex}
 		\begin{enumerate}
 			\item Moreover, the use of skip connections with the data from a feature pyramid allows the classifier to learn from several resolutions of this feature.
 		\end{enumerate}
 	\item Not learning on ``background'' pixels (which were mostly arbitrary) saved some capacity on the model to learn extra details, and helped it generalise more.
+		\vspace{-1ex}
 		\begin{enumerate}
 			\item Note that earlier, smaller experiments with other models resulted in a lot of incorrect positives on these background pixels.
-				This property was a last-minute addition; we will consider continuing our experimentation in new models using this.
+				This property was a last-minute addition; we will consider to further experiment in new models using this.
 		\end{enumerate}
 	\item Effective use of Dropout prevented bad overfitting.
 		It's easy to compare \cref{unet_model_loss} with \cref{swin2_model_loss} and realise that, while early stopping prevented the model from learning many incorrect details, the UNet model is still not able to learn some correct ones due to how badly it overfits.
@@ -26,9 +28,7 @@ We propose several reasons.
 The most effective part of this project was its infrastructure: having a ``backbone'' of trainers allow us to train new models quickly and easily (with the appreciated help from Wandb) allowed us to iterate quickly and try a lot of experiments without worrying about breaking the infrastructure.
 
 Additionally, having two canonical metrics we do not train in (IoU and \iiouc{} scores) allowed us to compare different models easily.
-Most importantly, the halving parameter sweep in \cref{param_sweep_section} allowed us to find and compare dozens of different hyperparameter combinations in a reasonable amount of time.
-
-The CityScapes dataset did not provide a test set, as it's a secret of its benchmarking competition\cite{cityscapes_benchmark}.
+The halving parameter sweep in \cref{param_sweep_section} allowed us to find and compare dozens of different hyperparameter combinations in a reasonable amount of time.
 
 We plan continue improving the Swin2-JNet model in the future and submit it to the benchmark suite.
 If our calculations in the validation set are roughly correct, we should be roughly in the best two thirds of \href{https://www.cityscapes-dataset.com/benchmarks/#pixel-level-results}{the CityScapes Benchmark Competition}, despite not even using the fine dataset.

@@ -6,10 +6,9 @@
 \label{loss_function_section}
 
 The choice of loss function is crucial for the performance of our model.
-
 In this assessment, we experimented with three different loss functions.
 
-\begin{description}[style=nextline]
+\begin{description}[]
 	\item[Categorical Cross-Entropy Loss] All pixels (except the ones marked as background) are equally weighted.
 	\item[CCE loss ignoring background pixels] Pixels marked as background in the true mask are not counted for the loss.
 	\item[Intersection over Union Loss] A differentiable version of IoU score, which should ideally work to maximise it.
@@ -23,16 +22,15 @@ Since it contradicts some existing literature\cite{dice_loss}, it warrants more 
 
 Ignoring background pixels produces better metrics in IoU score than regular categorical cross-entropy.
 However, a bad classifier might ``hallucinate'' bad pixels in areas of the background, and these false positives could cause bigger problem than unknown pixels despite not being part of the IoU Score.
-
 The objective of this work is to produce a good mask for city scenes, so not ignoring pixels might be preferable despite the hit in metrics.
-To produce a balanced approach, we will train the first two models (baseline and UNet) on regular categorical cross-entropy loss.
 
+To produce a balanced approach, we will train the first two models (baseline and UNet) on regular categorical cross-entropy loss.
 In our experiments the second enhanced model (Swin2-JNet) is considerably stronger and likely to have fewer false positives compared to the other models, so we will train it ignoring these background pixels to later compare it to the other models.
 
 \begin{figure}[b]
 	\centering
-	\includegraphics[width=.81\textwidth]{cce_vs_iou_loss.png}
-	\caption{IoU score for an early model based on UNet that was trained to minimise both categorical cross-entropy and a related IoU loss depending on the epoch. Surprisingly, the one that optimises CCE has better results.}
+	\includegraphics[width=.79\textwidth]{cce_vs_iou_loss.png}
+	\caption{IoU score for an early model based on UNet that was trained to minimise both categorical cross-entropy and a related IoU loss. Surprisingly, the one that optimises CCE has better results.}
 	\label{iou_vs_cce}
 \end{figure}
 
@@ -62,7 +60,7 @@ This can be seen in \cref{gamma_vs_nogamma}.
 
 \begin{figure}
 	\centering
-	\includegraphics[width=.90\textwidth]{gamma_vs_nogamma.png}
+	\includegraphics[width=.75\textwidth]{gamma_vs_nogamma.png}
 	\caption{Differences between training and validation loss of a classifier that dynamically adjusts its learning rate every 10 steps and one that doesn't. While both classifiers overfit, the dynamic learning rate makes this process slower and the eventual validation loss reaches better values.}
 	\label{gamma_vs_nogamma}
 \end{figure}
@@ -102,7 +100,6 @@ In order to test all of them, for the two enhanced models we run a hyperparamete
 \end{table}
 
 The entire dataset of 2975 images is very large, and making this 36-parameter sweep cost-prohibitive.
-
 To run a parameter sweep on all possible combinations of hyperparameters, we instead run a \textbf{Halving Parameter Sweep}\cite{halving_param_sweep}.
 \begin{enumerate}
 	\item Train classifiers for 20 epochs using a randomly sampled subset of the data for each combination of hyperparameters.
@@ -131,7 +128,6 @@ The results can be found in \cref{param_sweep}, with the best parameters in \cre
 \end{table}
 
 The scores of this parameter sweep will likely be lower than the final scores of the models since even at the last stage they are training with less data.
-
 However, we can be relatively certain that the \emph{order} of the results of each step is roughly correct.
 
 \newpage{}
@@ -145,17 +141,17 @@ In addition to the best hyperparameters for our models, this parameter sweep giv
 	\item In a similar way, the strong regularisation provided by dropout makes the case of $\gamma = 1$ the best for the Swin2-JNet model.
 \end{enumerate}
 
-\vfill{}
+% \vfill{}
 
 \begin{figure}[h]
 	\begin{subfigure}[t]{.35\textwidth}
-		\includegraphics[height=300pt]{unet_sweep.png}
+		\includegraphics[height=290pt]{unet_sweep.png}
 		\caption{Halving hyperparameter sweep for UNet model.}
 		\label{unet_param_sweep}
 	\end{subfigure} \hfill{}
 	\begin{subfigure}[t]{.65\textwidth}
 		\hfill{}
-		\includegraphics[height=300pt]{swin2_sweep.png}
+		\includegraphics[height=290pt]{swin2_sweep.png}
 		\caption{Halving hyperparameter sweep for Swin2-JNet model.}
 		\label{swin2_param_sweep}
 	\end{subfigure}
