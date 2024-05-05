@@ -26,7 +26,7 @@ The objective of this work is to produce a good mask for city scenes, so not ign
 \begin{figure}[b]
 	\centering
 	\includegraphics[width=.90\textwidth]{cce_vs_iou_loss.png}
-	\caption{IoU score for UNet models trained to minimise both categorical cross-entropy and a related IoU loss depending on the epoch. Surprisingly, the one that optimises CCE has better results.}
+	\caption{IoU score for an early model based on UNet that was trained to minimise both categorical cross-entropy and a related IoU loss depending on the epoch. Surprisingly, the one that optimises CCE has better results.}
 	\label{iou_vs_cce}
 \end{figure}
 
@@ -113,12 +113,12 @@ The results can be found in \cref{param_sweep}, with the best parameters in \cre
 \begin{table}[h]
 	\centering
 	\small
-	\begin{tabular}{>{\bfseries}r | c c c c | r}
+	\begin{tabular}{>{\bfseries}r | c c c c | r r r}
 		\toprule
-		Model & LR & $\gamma$ & \lt{} & Dropout & Val Loss \\
+		Model & LR & $\gamma$ & \lt{} & Dropout & Val Loss & IoU & iIoU \\
 		\midrule
-		UNet & $10^{-3}$ & $\sqrt{0.1}$ & $0$ & & \num{221343} \\
-		Swin2-J & $10^{-3}$ & 1 & $10^{-4}$ & $0.05$ & \num{78946} \\
+		UNet & $10^{-3}$ & $\sqrt{0.1}$ & $0$ & & \num{221343} & 17.56 & 20.30 \\
+		Swin2-J & $10^{-3}$ & 1 & $10^{-4}$ & $0.05$ & \num{78946} & 25.47 & 27.60 \\
 		\bottomrule
 	\end{tabular}
 	\caption{Parameters with best validation loss in the last round of the halving hyperparameter sweep.}
