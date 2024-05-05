@@ -18,6 +18,7 @@
 \usepackage{xfrac}
 \usepackage[symbol]{footmisc}
 \usepackage{appendix}
+\usepackage{tabularx}
 
 \usepackage[hypertexnames=false,hidelinks]{hyperref}
 \usepackage[noabbrev,nameinlink,capitalize,poorman]{cleveref}
@@ -36,20 +37,30 @@
 \begin{document}
 
 \begin{titlepage}
-	\centering
-	\includegraphics[width=\textwidth]{City\_logo.jpg} \\[4em]
-	\begin{bfseries}
-		\begin{Huge}
-			Deep Learning for Image Analysis \\[35pt]
-			\textsl{Written Report}
-		\end{Huge}
-	\end{bfseries}
+	\begin{center}
+		\includegraphics[width=\textwidth]{City\_logo.jpg} \\[4em]
+		\begin{bfseries}
+			\begin{Huge}
+				Deep Learning for Image Analysis \\[35pt]
+				\textsl{Written Report}
+			\end{Huge}
+		\end{bfseries}
+	\end{center}
 	\vfill{}
+	\begin{small}
+		\begin{tabularx}{1.05\textwidth}{X l}
+			Github repo & \url{https://github.com/mfixman/ai-convolutional} \\
+			Wandb dataset (most work) & \url{https://wandb.ai/mfixman-convolutional-team/work} \\
+			Wandb dataset (param sweep) & \url{https://wandb.ai/mfixman-convolutional-team/work_sweep}
+		\end{tabularx}
+	\end{small}
 	\begin{LARGE}
-		\begin{sffamily}
-			Martin Fixman and Grigorios Vaitsas \\[10pt]
-			2023/2024 Term
-		\end{sffamily}
+		\begin{center}
+			\begin{sffamily}
+				Martin Fixman and Grigorios Vaitsas \\[10pt]
+				2023/2024 Term
+			\end{sffamily}
+		\end{center}
 	\end{LARGE}
 \end{titlepage}
 
