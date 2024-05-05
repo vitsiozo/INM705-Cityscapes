@@ -122,6 +122,21 @@ def main():
         config = config,
     )
 
+    if not os.path.exists('data/leftImg8bit') or not os.path.exists(os.path.join('data', config['granularity'])):
+        mask = {
+            'coarse': '**Coarse masks** `gtCoarse.zip` (1.3GB): https://www.cityscapes-dataset.com/file-handling/?packageID=2',
+            'fine': '**Fine masks** `gtFine_trainvaltest.zip (241MB): https://www.cityscapes-dataset.com/file-handling/?packageID=1',
+        }
+        logging.error(f'''Source data not found.
+
+            Source images should be located in data/leftImg8bit, while ground truth labels should be in data/{config['granularity']}.
+            The files can be downloaded from these locations:
+                1. **City images** `leftImg8bit_trainvaltext.zip` (11GB): https://www.cityscapes-dataset.com/file-handling/?packageID=3
+                2. {mask[config['granularity']]}
+            Read the README.md file for more information
+        ''')
+        raise ValueError('Input data not found')
+
     train_dataset = CityScapesDataset('data/leftImg8bit/train', os.path.join('data', config['granularity'], 'train'), n = config['n'], size = config['image_size'], granularity = config['granularity'])
     val_dataset = CityScapesDataset('data/leftImg8bit/val', os.path.join('data', config['granularity'], 'val'), n = config['n'], size = config['image_size'], granularity = config['granularity'])
 
