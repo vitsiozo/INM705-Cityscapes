@@ -73,7 +73,7 @@ The base model of Swin2 encodes the data in 4 attention heads, each one with a s
 We can leverage this data by getting each of the 4 output feature maps at each step of the way, and adding them as skip connections to up-convolutions in a similar way to UNet.
 
 Additionally, we noticed that this model tends to overfit quicker than other UNet model.
-To prevent this, we added a both a \emph{Dropout} and a \emph{Batch Normalisation} layer to each convolutional block; these normalisations tend to improve the performance of the model.
+To prevent this, we added both a \emph{Dropout} and a \emph{Batch Normalisation} layer to each convolutional block; these normalisations tend to improve the performance of the model.
 
 The ideal ratio of dropout was found in a parameter sweep, along with most other parameters, in \cref{param_sweep}.
 
